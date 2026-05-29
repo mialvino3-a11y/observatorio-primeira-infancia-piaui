@@ -1896,6 +1896,7 @@ let PIUI_GEO = {geo_js};
 let activeEixo = null;
 
 function scoreColor(s) {{
+  if (s === null || s === undefined) return {{bg:'#f0f2f5', txt:'#aab0bb', label:'n/d'}};
   if (s >= 70) return {{bg:'#EAF3DE', txt:'#27ae60', label:'Bom'}};
   if (s >= 45) return {{bg:'#FAEEDA', txt:'#e67e22', label:'Atenção'}};
   return {{bg:'#FCEBEB', txt:'#c0392b', label:'Crítico'}};
@@ -1903,33 +1904,39 @@ function scoreColor(s) {{
 
 function munEixoScore(mun, eixo) {{
   const mi = MI[mun] || {{}};
-  const vals = eixo.ids.map((id, i) => {{
+  const pts = [];
+  eixo.ids.forEach((id, i) => {{
     const v  = mi[id];
     const pi = eixo.refs[i];
-    if (v == null || v === undefined || pi == null || pi === 0) return 50;
+    if (v == null || v === undefined || pi == null || pi === 0) return;
     const ratio = v / pi;
     const cls   = eixo.cls[i];
-    if (cls === 'pior')   return ratio > 1.10 ? 20 : ratio > 1.02 ? 50 : 80;
-    if (cls === 'melhor') return ratio < 0.90 ? 20 : ratio < 0.97 ? 50 : 80;
-    return 50;
+    let p;
+    if (cls === 'pior')   p = ratio > 1.10 ? 20 : ratio > 1.02 ? 50 : 80;
+    else if (cls === 'melhor') p = ratio < 0.90 ? 20 : ratio < 0.97 ? 50 : 80;
+    else p = 50;
+    pts.push(p);
   }});
-  return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  if (pts.length === 0) return null;
+  return Math.round(pts.reduce((a,b)=>a+b,0)/pts.length);
 }}
 
 function munOverallScore(mun) {{
-  return Math.round(EIXOS.reduce((s,e)=>s+munEixoScore(mun,e),0)/EIXOS.length);
+  const scores = EIXOS.map(e => munEixoScore(mun,e)).filter(s => s !== null);
+  if (scores.length === 0) return null;
+  return Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
 }}
 
 /* ── TERMÔMETROS ── */
 function renderThermo() {{
   const el = document.getElementById('pacto-thermo');
   el.innerHTML = EIXOS.map(e => {{
-    const scores = MUN_KEYS.map(m => munEixoScore(m,e));
-    const avg  = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+    const scores = MUN_KEYS.map(m => munEixoScore(m,e)).filter(s => s !== null);
+    const avg  = scores.length > 0 ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : null;
     const crit = scores.filter(s=>s<45).length;
     const sc   = scoreColor(avg);
-    const trend = avg>=70?'↗ Melhorando':avg>=45?'→ Estável':'↘ Piorando';
-    const tColor= avg>=70?'#27ae60':avg>=45?'#e67e22':'#c0392b';
+    const trend = avg===null?'sem dados':avg>=70?'↗ Melhorando':avg>=45?'→ Estável':'↘ Piorando';
+    const tColor= avg===null?'#aab0bb':avg>=70?'#27ae60':avg>=45?'#e67e22':'#c0392b';
     const isActive = activeEixo === e.key;
     return `<div onclick="selectEixo('${{e.key}}')" id="thermo-${{e.key}}" class="thermo-card"
       style="border:2px solid ${{isActive?e.cor:e.cor+'33'}};background:${{isActive?'#f8f9ff':'#fff'}}">
@@ -1938,14 +1945,14 @@ function renderThermo() {{
         <span style="font-size:8px;color:${{tColor}}">${{trend}}</span>
       </div>
       <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:5px">
-        <span style="font-size:22px;font-weight:700;color:${{sc.txt}}">${{avg}}</span>
-        <span style="font-size:9px;color:#aab0bb">/ 100</span>
+        <span style="font-size:22px;font-weight:700;color:${{sc.txt}}">${{avg !== null ? avg : 'n/d'}}</span>
+        <span style="font-size:9px;color:#aab0bb">${{avg !== null ? '/ 100' : ''}}</span>
       </div>
       <div style="height:5px;background:#eef0f3;border-radius:3px;overflow:hidden;margin-bottom:5px">
-        <div style="height:100%;width:${{avg}}%;background:${{e.cor}};border-radius:3px;transition:width .4s"></div>
+        <div style="height:100%;width:${{avg !== null ? avg : 0}}%;background:${{e.cor}};border-radius:3px;transition:width .4s"></div>
       </div>
       <div style="font-size:8.5px;color:${{crit>3?'#c0392b':'#aab0bb'}};font-weight:${{crit>3?700:400}}">
-        ${{crit}} município${{crit!==1?'s':''}} crítico${{crit!==1?'s':''}}
+        ${{avg !== null ? crit+' município'+(crit!==1?'s':'')+' crítico'+(crit!==1?'s':'') : 'dados indisponíveis'}}
       </div>
     </div>`;
   }}).join('');
@@ -2014,7 +2021,7 @@ function renderMap(selMun) {{
       </g>`;
       lbls+=`<g pointer-events="none">
         <text x="${{cx.toFixed(1)}}" y="${{(cy-2).toFixed(1)}}" text-anchor="middle" font-size="7.5" font-family="Inter,sans-serif" font-weight="${{isSel?700:600}}" fill="${{isSel?'#1a3a6b':c.txt}}" style="text-shadow:0 1px 2px rgba(255,255,255,.9)">${{MC[munKey].nome.split(' ')[0]}}</text>
-        <text x="${{cx.toFixed(1)}}" y="${{(cy+8).toFixed(1)}}" text-anchor="middle" font-size="7" font-family="Inter,sans-serif" font-weight="700" fill="${{isSel?'#1a3a6b':c.txt+'99'}}">${{sc2}}</text>
+        <text x="${{cx.toFixed(1)}}" y="${{(cy+8).toFixed(1)}}" text-anchor="middle" font-size="7" font-family="Inter,sans-serif" font-weight="700" fill="${{isSel?'#1a3a6b':c.txt+'99'}}">${{sc2 !== null ? sc2 : 'n/d'}}</text>
       </g>`;
     }} else {{
       bg+=`<path d="${{d}}" fill="#e8edf2" stroke="#fff" stroke-width="0.4"/>`;
@@ -2036,9 +2043,9 @@ function renderMap(selMun) {{
       g.querySelector('path').style.filter='brightness(0.86)';
       const sc2=munOverallScore(key), c=scoreColor(sc2);
       const rows=EIXOS.map(e=>{{const es=munEixoScore(key,e);const ec=scoreColor(es);
-        return`<div style="display:flex;justify-content:space-between;gap:14px"><span style="color:rgba(255,255,255,.65)">${{e.label}}</span><span style="font-weight:700;color:${{ec.bg}}">${{es}}</span></div>`;
+        return`<div style="display:flex;justify-content:space-between;gap:14px"><span style="color:rgba(255,255,255,.65)">${{e.label}}</span><span style="font-weight:700;color:${{ec.bg}}">${{es !== null ? es : 'n/d'}}</span></div>`;
       }}).join('');
-      tt.innerHTML=`<div style="font-weight:700;font-size:11px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.2);padding-bottom:4px">${{MC[key].nome}}</div>${{rows}}<div style="margin-top:4px;border-top:1px solid rgba(255,255,255,.2);padding-top:4px;display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.6)">Geral</span><span style="font-weight:700;color:${{c.bg}}">${{sc2}}</span></div>`;
+      tt.innerHTML=`<div style="font-weight:700;font-size:11px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.2);padding-bottom:4px">${{MC[key].nome}}</div>${{rows}}<div style="margin-top:4px;border-top:1px solid rgba(255,255,255,.2);padding-top:4px;display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.6)">Geral</span><span style="font-weight:700;color:${{c.bg}}">${{sc2 !== null ? sc2 : 'n/d'}}</span></div>`;
       tt.style.display='block';
     }});
     g.addEventListener('mousemove',evt=>{{
@@ -2065,12 +2072,12 @@ function renderHeatmap(selMun) {{
     const fw=isSel?700:400;
     const ov=munOverallScore(mun), oc=scoreColor(ov);
     const cells=EIXOS.map(e=>{{const s=munEixoScore(mun,e);const c=scoreColor(s);
-      return`<td style="padding:4px 6px;text-align:center"><span class="badge" style="background:${{c.bg}};color:${{c.txt}}">${{s}}</span></td>`;
+      return`<td style="padding:4px 6px;text-align:center"><span class="badge" style="background:${{c.bg}};color:${{c.txt}}">${{s !== null ? s : 'n/d'}}</span></td>`;
     }}).join('');
     return`<tr style="background:${{bg}};cursor:pointer" onclick="onHeatmapClick('${{mun}}')">
       <td style="padding:4px 10px;font-weight:${{fw}};white-space:nowrap">${{MC[mun].nome}}</td>
       ${{cells}}
-      <td style="padding:4px 6px;text-align:center"><span class="badge" style="background:${{oc.bg}};color:${{oc.txt}}">${{ov}}</span></td>
+      <td style="padding:4px 6px;text-align:center"><span class="badge" style="background:${{oc.bg}};color:${{oc.txt}}">${{ov !== null ? ov : 'n/d'}}</span></td>
     </tr>`;
   }}).join('');
   t.innerHTML=hdr+'<tbody>'+rows+'</tbody>';
@@ -2083,7 +2090,12 @@ function renderRanking(eixoKey) {{
   const eixo=EIXOS.find(e=>e.key===eixoKey);
   if(!eixo) return;
   document.getElementById('ranking-title').textContent=`Ranking — ${{eixo.label}} (0 = pior · 100 = melhor)`;
-  const sorted=[...MUN_KEYS].map(m=>({{mun:m,score:munEixoScore(m,eixo)}})).sort((a,b)=>a.score-b.score);
+  const sorted=[...MUN_KEYS].map(m=>({{mun:m,score:munEixoScore(m,eixo)}})).sort((a,b)=>{{
+    if(a.score===null&&b.score===null)return 0;
+    if(a.score===null)return 1;
+    if(b.score===null)return -1;
+    return a.score-b.score;
+  }});
   const t=document.getElementById('ranking-table');
   const rows=sorted.map((item,i)=>{{
     const c=scoreColor(item.score);
@@ -2092,10 +2104,10 @@ function renderRanking(eixoKey) {{
       <td style="padding:3px 8px;white-space:nowrap">${{MC[item.mun].nome}}</td>
       <td style="padding:3px 8px;width:110px">
         <div style="height:5px;background:#eef0f3;border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${{item.score}}%;background:${{eixo.cor}};border-radius:3px"></div>
+          <div style="height:100%;width:${{item.score !== null ? item.score : 0}}%;background:${{eixo.cor}};border-radius:3px"></div>
         </div>
       </td>
-      <td style="padding:3px 8px"><span class="badge" style="background:${{c.bg}};color:${{c.txt}}">${{item.score}}</span></td>
+      <td style="padding:3px 8px"><span class="badge" style="background:${{c.bg}};color:${{c.txt}}">${{item.score !== null ? item.score : 'n/d'}}</span></td>
     </tr>`;
   }}).join('');
   t.innerHTML=`<thead><tr><th>#</th><th>Município</th><th>Desempenho</th><th>Score</th></tr></thead><tbody>${{rows}}</tbody>`;
