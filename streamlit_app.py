@@ -44,18 +44,18 @@ PIAUI_GEOJSON = BASE_DIR / "geojs-22-mun.json"
 
 # ─── Cores e paleta do projeto ───────────────────────────────────────────────
 
-COR_RESULTADO   = "#e85c41"   # coral — resultados
-COR_ESFORCO     = "#2a5abf"   # azul  — esforços
-COR_PI          = "#f5c842"   # amarelo — Piauí
-COR_BR          = "#b4b2a9"   # cinza  — Brasil
-COR_BOM         = "#27ae60"
-COR_ATENCAO     = "#e67e22"
-COR_CRITICO     = "#c0392b"
-COR_BOM_BG      = "#EAF3DE"
-COR_ATENCAO_BG  = "#FAEEDA"
-COR_CRITICO_BG  = "#FCEBEB"
-COR_NEUTRO_BG   = "#f0f2f5"
-COR_NEUTRO      = "#5a6478"
+COR_RESULTADO   = "#EF817D"   # coral brand — resultados
+COR_ESFORCO     = "#034EA2"   # azul escuro brand — esforços
+COR_PI          = "#ADCC6B"   # verde brand — Piauí
+COR_BR          = "#808080"   # cinza brand — Brasil
+COR_BOM         = "#5E8C2A"   # verde escuro — bom
+COR_ATENCAO     = "#C97C1A"   # laranja escuro — atenção
+COR_CRITICO     = "#C0392B"   # vermelho — crítico
+COR_BOM_BG      = "#EAF3D8"   # verde muito claro
+COR_ATENCAO_BG  = "#FEF3E7"   # laranja muito claro
+COR_CRITICO_BG  = "#F9F2F2"   # rosa muito claro brand
+COR_NEUTRO_BG   = "#F5F5F5"   # cinza brand bg
+COR_NEUTRO      = "#808080"   # cinza brand
 
 
 # ─── Catálogo de indicadores (spec v4.5) ─────────────────────────────────────
@@ -541,21 +541,29 @@ def kpi_card(label: str, value: str, ref: str = ""):
 def apply_app_css():
     st.markdown("""
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;700&display=swap');
 
           :root {
-            --pi-bg: #f0f2f5;
+            --pi-bg: #F5F5F5;
             --pi-card: #ffffff;
-            --pi-card-border: #e0e4ea;
-            --pi-text: #2c3e50;
-            --pi-text-soft: #7a8496;
-            --pi-accent: #2b57a8;
+            --pi-card-border: #E8E8E8;
+            --pi-text: #313131;
+            --pi-text-soft: #4C4C4F;
+            --pi-accent: #034EA2;
+            --pi-blue: #2260B8;
+            --pi-blue-light: #5282C2;
+            --pi-blue-vivid: #4147D5;
+            --pi-coral: #EF817D;
+            --pi-green: #ADCC6B;
+            --pi-orange: #F4A94E;
+            --pi-blue-bg: #D7E0FF;
             --pi-radius: 10px;
           }
 
           html, body, [class*="css"] {
             font-family: "Inter", "Segoe UI", sans-serif !important;
-            color: #2c3e50;
+            font-size: 15px !important;
+            color: #313131;
           }
 
           .stApp, [data-testid="stAppViewContainer"] { background: var(--pi-bg); }
@@ -563,153 +571,166 @@ def apply_app_css():
           [data-testid="stSidebar"] { background: #ffffff; }
           .main .block-container {
             max-width: 100% !important;
-            padding-top: 0.35rem !important;
-            padding-left: 1.05rem !important;
-            padding-right: 1.05rem !important;
-            padding-bottom: 0.75rem !important;
+            padding-top: 0.5rem !important;
+            padding-left: 1.2rem !important;
+            padding-right: 1.2rem !important;
+            padding-bottom: 1rem !important;
           }
 
           .stButton > button {
-            height: 33px; border-radius: 999px;
-            border: 1px solid #d0d5dd; color: #2a5abf;
-            background: #ffffff; font-weight: 600;
-            font-size: 0.72rem; padding: 0.2rem 0.78rem;
+            height: 36px; border-radius: 999px;
+            border: 1.5px solid #D7E0FF; color: #034EA2;
+            background: #ffffff; font-weight: 700;
+            font-size: 0.85rem; padding: 0.25rem 1rem;
           }
           .stButton > button:hover {
-            border-color: #2a5abf; color: #2a5abf; background: #eef2fc;
+            border-color: #034EA2; color: #034EA2; background: #D7E0FF;
           }
 
-          h2, h3 { font-family: "Playfair Display", serif !important; color: #1a3a6b !important; letter-spacing: -0.01em; font-weight: 700 !important; }
+          h2, h3 { font-family: "Playfair Display", serif !important; color: #034EA2 !important; letter-spacing: -0.01em; font-weight: 700 !important; }
+          p, li, td, th, span, div { font-size: 0.95rem; }
 
           /* KPI card */
           .pi-kpi-card {
-            min-height: 72px; border-radius: 8px;
+            min-height: 76px; border-radius: 8px;
             border: 1px solid var(--pi-card-border);
-            background: var(--pi-card); padding: 8px 10px;
+            background: var(--pi-card); padding: 10px 12px;
             display: flex; flex-direction: column; justify-content: center;
           }
           .pi-kpi-label {
-            color: #aab0bb; font-size: 0.5rem;
-            font-weight: 700; letter-spacing: 0.08em;
+            color: #808080; font-size: 0.72rem;
+            font-weight: 700; letter-spacing: 0.07em;
             text-transform: uppercase; margin-bottom: 5px;
           }
           .pi-kpi-value {
-            color: var(--pi-text); font-size: 1.05rem;
-            font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums;
+            color: var(--pi-text); font-size: 1.15rem;
+            font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums;
           }
           .pi-kpi-ref {
-            font-size: 0.48rem; color: #aab0bb;
+            font-size: 0.7rem; color: #808080;
             margin-top: 4px; font-weight: 600;
           }
 
           /* Cabeçalho de seção */
           .pi-section-header {
             display: flex; align-items: center; gap: 8px;
-            padding: 5px 0 4px 0; margin-bottom: 2px;
+            padding: 6px 0 5px 0; margin-bottom: 4px;
           }
           .pi-section-bar {
-            width: 4px; height: 18px; border-radius: 3px; flex-shrink: 0;
+            width: 4px; height: 20px; border-radius: 3px; flex-shrink: 0;
           }
           .pi-section-title {
-            font-size: 0.68rem; font-weight: 800; color: #5a6478;
+            font-size: 0.82rem; font-weight: 800; color: #4C4C4F;
             text-transform: uppercase; letter-spacing: 0.06em;
           }
           .pi-section-sub {
-            font-size: 0.56rem; color: #aab0bb; font-weight: 600; margin-left: 4px;
+            font-size: 0.72rem; color: #808080; font-weight: 600; margin-left: 4px;
           }
 
           /* Painel de contexto (barra azul escura) */
           .pi-ctx-bar {
-            background: #1a3a6b; border-radius: 8px;
-            padding: 9px 16px; margin-bottom: 10px;
+            background: #034EA2; border-radius: 8px;
+            padding: 10px 18px; margin-bottom: 12px;
             display: flex; gap: 0; overflow: hidden;
           }
           .pi-ctx-item {
-            flex: 1; display: flex; flex-direction: column; gap: 1px;
-            padding: 0 12px;
-            border-right: 1px solid rgba(255,255,255,.15);
+            flex: 1; display: flex; flex-direction: column; gap: 2px;
+            padding: 0 14px;
+            border-right: 1px solid rgba(255,255,255,.18);
           }
           .pi-ctx-item:first-child { padding-left: 0; }
           .pi-ctx-item:last-child  { border-right: none; padding-right: 0; }
-          .pi-ctx-lbl { font-size: 0.58rem; font-weight: 700; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .5px; }
-          .pi-ctx-val { font-size: 1.05rem; font-weight: 800; line-height: 1.2; color: rgba(255,255,255,.92); }
-          .pi-ctx-ref { font-size: 0.58rem; color: rgba(255,255,255,.4); }
+          .pi-ctx-lbl { font-size: 0.7rem; font-weight: 700; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .5px; }
+          .pi-ctx-val { font-size: 1.15rem; font-weight: 800; line-height: 1.2; color: rgba(255,255,255,.95); }
+          .pi-ctx-ref { font-size: 0.68rem; color: rgba(255,255,255,.5); }
 
           /* Badges */
           .pi-badge {
-            display: inline-block; padding: 2px 9px; border-radius: 6px;
-            font-size: 0.68rem; font-weight: 800; white-space: nowrap;
+            display: inline-block; padding: 3px 10px; border-radius: 6px;
+            font-size: 0.8rem; font-weight: 800; white-space: nowrap;
           }
-          .td-up { background: #EAF3DE; color: #27ae60; }
-          .td-dn { background: #FCEBEB; color: #c0392b; }
-          .td-fl { background: #f0f2f5; color: #5a6478; }
+          .td-up { background: #EAF3D8; color: #5E8C2A; }
+          .td-dn { background: #F9F2F2; color: #C0392B; }
+          .td-fl { background: #F5F5F5; color: #808080; }
 
           /* Tabela de indicadores */
-          .pi-ind-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+          .pi-ind-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
           .pi-ind-table th {
-            font-size: 0.62rem; font-weight: 700; color: #aab0bb;
+            font-size: 0.76rem; font-weight: 700; color: #808080;
             text-transform: uppercase; letter-spacing: .5px;
-            padding: 5px 10px; text-align: right; background: #fafbfc;
-            border-bottom: 1px solid #eef0f3;
+            padding: 6px 10px; text-align: right; background: #F5F5F5;
+            border-bottom: 1px solid #E8E8E8;
           }
           .pi-ind-table th:first-child { text-align: left; }
           .pi-ind-table td {
-            padding: 6px 10px; border-top: 1px solid #f0f2f5;
-            color: #2c3e50; vertical-align: middle;
+            padding: 7px 10px; border-top: 1px solid #F5F5F5;
+            color: #313131; vertical-align: middle;
           }
-          .pi-ind-table td:first-child { color: #3a4558; max-width: 260px; }
+          .pi-ind-table td:first-child { color: #4C4C4F; max-width: 260px; font-size: 0.86rem; }
           .pi-ind-table td:not(:first-child) { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
           .pi-ind-table tr:hover td { background: #f8f9fb; }
 
           /* Barras horizontais de comparação */
-          .pi-bar-row { margin-bottom: 10px; }
+          .pi-bar-row { margin-bottom: 12px; }
           .pi-bar-label {
             display: flex; justify-content: space-between;
-            font-size: 0.72rem; color: #2c3e50; margin-bottom: 3px;
+            font-size: 0.85rem; color: #313131; margin-bottom: 4px;
           }
           .pi-bar-track {
-            position: relative; height: 8px;
-            background: #f0f2f5; border-radius: 4px;
+            position: relative; height: 9px;
+            background: #E8E8E8; border-radius: 5px;
           }
 
           /* Card de painel */
           .pi-panel {
-            background: #ffffff; border: 1px solid #e0e4ea;
-            border-radius: 8px; padding: 8px 10px;
+            background: #ffffff; border: 1px solid #E8E8E8;
+            border-radius: 10px; padding: 10px 12px;
           }
           .pi-panel-title {
-            font-size: 0.58rem; font-weight: 800; color: #5a6478;
+            font-size: 0.76rem; font-weight: 800; color: #4C4C4F;
             text-transform: uppercase; letter-spacing: 0.06em;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
           }
           .contexto-nav-label {
-            font-size: 0.56rem; color: #6c757d;
+            font-size: 0.7rem; color: #808080;
             text-transform: uppercase; letter-spacing: 0.14em;
-            font-weight: 800; margin-bottom: 5px;
+            font-weight: 800; margin-bottom: 6px;
           }
           .contexto-nav {
             display: flex; flex-wrap: wrap; gap: 8px;
-            margin: 0 0 12px 0;
+            margin: 0 0 14px 0;
           }
           .contexto-nav-item {
             display: inline-flex; align-items: center;
-            padding: 5px 10px; border-radius: 999px;
-            border: 1px solid #dbe3f1; background: #ffffff;
-            color: #355fbb !important; font-size: 0.68rem; font-weight: 700;
+            padding: 6px 12px; border-radius: 999px;
+            border: 1px solid #D7E0FF; background: #ffffff;
+            color: #034EA2 !important; font-size: 0.82rem; font-weight: 700;
             text-decoration: none !important;
           }
           .contexto-nav-item:hover {
-            background: #f2f6ff; border-color: #bfcff0;
+            background: #D7E0FF; border-color: #5282C2;
           }
           .contexto-nav-item.active {
-            background: #355fbb; color: #ffffff !important; border-color: #355fbb;
+            background: #034EA2; color: #ffffff !important; border-color: #034EA2;
+          }
+
+          /* Filter bar */
+          .pi-filter-bar {
+            background: #ffffff; border: 1px solid #E8E8E8; border-radius: 10px;
+            padding: 10px 16px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+          }
+          .pi-filter-label {
+            font-size: 0.72rem; font-weight: 700; color: #808080;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            white-space: nowrap;
           }
 
           /* Sidebar */
           .sidebar-logo {
-            margin: -1rem -1rem 16px -1rem;
-            padding: 20px 16px 16px;
-            border-bottom: 1px solid #e8edf5;
+            margin: -1rem -1rem 18px -1rem;
+            padding: 22px 16px 18px;
+            border-bottom: 1px solid #E8E8E8;
             background: #ffffff;
           }
           .sidebar-logo img {
@@ -717,9 +738,9 @@ def apply_app_css():
             display: block; margin: 0 auto;
           }
           .sidebar-group-title {
-            font-size: 0.68rem; color: #6c757d;
+            font-size: 0.74rem; color: #808080;
             text-transform: uppercase; letter-spacing: 0.16em;
-            margin: 0 0 6px 0; padding: 0 4px;
+            margin: 0 0 6px 0; padding: 0 4px; font-weight: 700;
           }
           .sidebar-shell a,
           .sidebar-shell a:link,
@@ -730,20 +751,21 @@ def apply_app_css():
             text-decoration: none !important;
           }
           .sidebar-item {
-            display: block; width: 100%; padding: 10px 12px;
-            border-radius: 10px; color: #1f2a44;
-            text-decoration: none !important; margin-bottom: 4px; font-weight: 700;
+            display: block; width: 100%; padding: 11px 14px;
+            border-radius: 10px; color: #313131;
+            text-decoration: none !important; margin-bottom: 4px;
+            font-weight: 700; font-size: 0.92rem;
           }
-          .sidebar-item:hover { background: #eef3ff; color: #1f2a44; }
-          .sidebar-item.active { background: #355fbb; color: #ffffff; }
+          .sidebar-item:hover { background: #D7E0FF; color: #034EA2; }
+          .sidebar-item.active { background: #034EA2; color: #ffffff; }
           .sidebar-home {
-            display: block; width: 100%; padding: 8px 12px;
-            border-radius: 10px; color: #5a6478;
-            text-decoration: none !important; margin: 0 0 12px 0;
-            font-weight: 600; font-size: 0.85rem;
+            display: block; width: 100%; padding: 9px 14px;
+            border-radius: 10px; color: #4C4C4F;
+            text-decoration: none !important; margin: 0 0 14px 0;
+            font-weight: 600; font-size: 0.9rem;
           }
-          .sidebar-home:hover { background: #eef3ff; color: #1f2a44; }
-          .sidebar-divider { border: none; border-top: 1px solid #e8edf5; margin: 12px 0; }
+          .sidebar-home:hover { background: #D7E0FF; color: #034EA2; }
+          .sidebar-divider { border: none; border-top: 1px solid #E8E8E8; margin: 14px 0; }
           [data-testid="stSidebar"] > div:first-child { height: 100vh; }
           [data-testid="stSidebarContent"] { height: 100%; }
           .sidebar-shell {
@@ -754,27 +776,27 @@ def apply_app_css():
           .sidebar-menu { flex: 1; }
           .sidebar-footer {
             margin-top: auto;
-            padding: 12px 4px 4px;
-            border-top: 1px solid #e8edf5;
+            padding: 14px 4px 6px;
+            border-top: 1px solid #E8E8E8;
           }
           .gov-line {
-            font-size: 0.52rem;
+            font-size: 0.64rem;
             font-weight: 800;
-            color: #1a3a6b;
+            color: #034EA2;
             letter-spacing: 0.12em;
             text-transform: uppercase;
           }
           .piaui-line {
-            font-size: 1.3rem;
+            font-size: 1.45rem;
             font-weight: 900;
-            color: #1a3a6b;
+            color: #034EA2;
             line-height: 1;
             letter-spacing: -0.04em;
           }
           .tagline-gov {
-            font-size: 0.55rem;
-            color: #9aa3b1;
-            margin-top: 2px;
+            font-size: 0.65rem;
+            color: #808080;
+            margin-top: 3px;
           }
           .sidebar-rainbow {
             display: flex;
@@ -783,55 +805,60 @@ def apply_app_css():
             overflow: hidden;
             margin-top: 10px;
           }
-          .sidebar-rainbow span:nth-child(1) { flex: 1; background: #e85c41; }
-          .sidebar-rainbow span:nth-child(2) { flex: 1; background: #f5c842; }
-          .sidebar-rainbow span:nth-child(3) { flex: 1; background: #5cb85c; }
-          .sidebar-rainbow span:nth-child(4) { flex: 1; background: #2a5abf; }
+          .sidebar-rainbow span:nth-child(1) { flex: 1; background: #EF817D; }
+          .sidebar-rainbow span:nth-child(2) { flex: 1; background: #F4A94E; }
+          .sidebar-rainbow span:nth-child(3) { flex: 1; background: #ADCC6B; }
+          .sidebar-rainbow span:nth-child(4) { flex: 1; background: #034EA2; }
 
           /* Capa */
           .capa-eyebrow {
-            font-size: .72rem; text-transform: uppercase;
-            letter-spacing: .12em; color: #e57d79; font-weight: 800;
+            font-size: .82rem; text-transform: uppercase;
+            letter-spacing: .12em; color: #EF817D; font-weight: 800;
             margin: 8px 0 8px 0;
           }
           .capa-title {
-            color: #4a50d3; font-size: 3.45rem; line-height: 0.97;
+            color: #4147D5; font-size: 3.45rem; line-height: 0.97;
             font-weight: 800; margin: 4px 0 6px 0; letter-spacing: -0.02em;
           }
-          .capa-title .accent { color: #ea807f; }
+          .capa-title .accent { color: #EF817D; }
           .capa-sub {
-            color: #4f5660; font-size: 1.03rem; line-height: 1.42;
+            color: #4C4C4F; font-size: 1.05rem; line-height: 1.42;
             max-width: 560px; margin: 10px 0 14px 0;
           }
           .capa-caption {
-            color: #4e79c9; font-size: .74rem;
+            color: #5282C2; font-size: .84rem;
             text-transform: uppercase; letter-spacing: .14em;
             font-weight: 800; margin: 12px 0 4px 0;
           }
           .st-key-capa_left, .st-key-capa_right {
-            background: #f6f7f9; border: 1px solid #e0e4ea;
+            background: #F5F5F5; border: 1px solid #E8E8E8;
             border-radius: 10px; padding: 14px 16px; min-height: 610px;
           }
-          .st-key-capa_right { background: #ecdfce; }
+          .st-key-capa_right { background: #e8dbc9; }
           .st-key-capa_right [data-testid="stImage"] img {
             max-height: 560px; object-fit: contain;
           }
           .st-key-capa_panel_nav button {
-            height: 30px !important; min-height: 30px !important;
-            padding: 0.1rem .72rem !important; border-radius: 999px !important;
-            border: 1px solid #d7dde8 !important; background: #ffffff !important;
-            color: #4e79c9 !important; font-size: .70rem !important; font-weight: 800 !important;
+            height: 32px !important; min-height: 32px !important;
+            padding: 0.15rem .82rem !important; border-radius: 999px !important;
+            border: 1.5px solid #D7E0FF !important; background: #ffffff !important;
+            color: #034EA2 !important; font-size: .80rem !important; font-weight: 800 !important;
           }
           .st-key-capa_panel_nav button:hover {
-            border-color: #4a50d3 !important; color: #4a50d3 !important;
-            background: #f3f5fb !important;
+            border-color: #4147D5 !important; color: #4147D5 !important;
+            background: #D7E0FF !important;
           }
 
-          [data-baseweb="select"] > div { min-height: 34px; border-radius: 6px; font-size: 0.78rem; }
-          [data-baseweb="select"] [role="combobox"] { font-size: 0.78rem; }
-          label[data-testid="stWidgetLabel"] p { font-size: 0.72rem !important; font-weight: 600 !important; color: #5a6478 !important; }
-          [data-testid="stVerticalBlockBorderWrapper"] { border-radius: 8px; }
-          [data-testid="stDataFrame"] { border-radius: 8px; overflow: hidden; }
+          [data-baseweb="select"] > div { min-height: 38px; border-radius: 8px; font-size: 0.9rem; }
+          [data-baseweb="select"] [role="combobox"] { font-size: 0.9rem; }
+          label[data-testid="stWidgetLabel"] p { font-size: 0.82rem !important; font-weight: 700 !important; color: #4C4C4F !important; }
+          [data-testid="stVerticalBlockBorderWrapper"] { border-radius: 10px; }
+          [data-testid="stDataFrame"] { border-radius: 10px; overflow: hidden; }
+          .stTabs [data-baseweb="tab-list"] { gap: 6px; }
+          .stTabs [data-baseweb="tab"] { font-size: 0.88rem; font-weight: 700; padding: 8px 14px; border-radius: 8px 8px 0 0; }
+          .stTabs [data-baseweb="tab"][aria-selected="true"] { color: #034EA2 !important; border-bottom-color: #034EA2 !important; }
+          [data-testid="stCaption"] p { font-size: 0.78rem !important; color: #808080 !important; }
+          [data-testid="stMarkdown"] p { font-size: 0.92rem; color: #313131; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -876,14 +903,14 @@ def render_sidebar_menu() -> str:
     active_page = st.session_state["pagina_ativa"]
     logo_uri = _to_data_uri(CAPA_LOGO) if CAPA_LOGO.exists() else ""
 
-    menu_html = '<a class="sidebar-home" href="?page=Capa">Início</a>'
+    menu_html = '<a class="sidebar-home" href="?page=Capa" target="_self">⬅ Início</a>'
     for index, (group_label, items) in enumerate(MENU_GROUPS):
         menu_html += f'<div class="sidebar-group-title">{group_label}</div>'
         for item in items:
             active_class = " active" if item == active_page else ""
             target_page = PAGE_FROM_MENU.get(item, st.session_state.get("page", "Perfil"))
             href = f'?page={quote_plus(target_page)}&pagina_ativa={quote_plus(item)}'
-            menu_html += f'<a class="sidebar-item{active_class}" href="{href}">{item}</a>'
+            menu_html += f'<a class="sidebar-item{active_class}" href="{href}" target="_self">{item}</a>'
         if index < len(MENU_GROUPS) - 1:
             menu_html += '<div class="sidebar-divider"></div>'
 
@@ -1021,7 +1048,7 @@ def _plotly_defaults() -> dict:
     return dict(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter, Segoe UI, sans-serif", size=10, color="#5a6478"),
+        font=dict(family="Inter, Segoe UI, sans-serif", size=12, color="#4C4C4F"),
         margin=dict(l=4, r=4, t=24, b=4),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
     )
@@ -1312,37 +1339,61 @@ def _tabela_comp_desvio(rows: list[dict]):
 
 # ─── Seletor de município / ano (barra top de cada painel) ───────────────────
 
+_MUN_ESTADO_LABEL = "🗺️ Piauí (Estado — média geral)"
+_MUN_ESTADO_CODE  = "__PI__"
+
 def _seletores_mun_ano(df: pd.DataFrame, key_prefix: str = "global") -> tuple[str, str, int]:
-    """Retorna (cod_ibge, nome_municipio, ano) selecionados."""
+    """Retorna (cod_ibge, nome_municipio, ano) selecionados.
+    cod_ibge == '__PI__' significa visão agregada do estado.
+    """
     if df.empty:
         return "", "", 0
+
     muns = (
         df[["cod_ibge", "municipio"]]
         .drop_duplicates()
         .sort_values("municipio")
     )
     anos_all = sorted(df["ano"].dropna().astype(int).unique().tolist(), reverse=True)
-    c1, c2, c3 = st.columns([3, 1, 1])
+
+    opcoes_mun = [_MUN_ESTADO_LABEL] + muns["municipio"].tolist()
+    opcoes_ano = ["Último disponível"] + [str(a) for a in anos_all]
+
+    st.markdown(
+        '<div style="background:#fff;border:1px solid #E8E8E8;border-radius:10px;padding:10px 16px 6px 16px;margin-bottom:14px;">'
+        '<div style="font-size:0.72rem;font-weight:700;color:#808080;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Filtros</div>',
+        unsafe_allow_html=True,
+    )
+    c1, c2 = st.columns([3, 1])
     with c1:
         nome_mun = st.selectbox(
             "Município",
-            options=muns["municipio"].tolist(),
+            options=opcoes_mun,
             key=f"sel_municipio_{key_prefix}",
         )
-    cod_ibge = str(muns.loc[muns["municipio"] == nome_mun, "cod_ibge"].iloc[0])
-    anos_mun = sorted(
-        df.loc[df["cod_ibge"].astype(str) == cod_ibge, "ano"].dropna().astype(int).unique().tolist(),
-        reverse=True,
-    )
-    anos = anos_mun if anos_mun else anos_all
     with c2:
-        ano = st.selectbox(
+        ano_sel_str = st.selectbox(
             "Ano de referência",
-            options=anos,
+            options=opcoes_ano,
             key=f"sel_ano_{key_prefix}",
         )
-    with c3:
-        st.write("")  # espaço para alinhamento
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if nome_mun == _MUN_ESTADO_LABEL:
+        cod_ibge = _MUN_ESTADO_CODE
+        anos_use = anos_all
+    else:
+        cod_ibge = str(muns.loc[muns["municipio"] == nome_mun, "cod_ibge"].iloc[0])
+        anos_use = sorted(
+            df.loc[df["cod_ibge"].astype(str) == cod_ibge, "ano"].dropna().astype(int).unique().tolist(),
+            reverse=True,
+        ) or anos_all
+
+    if ano_sel_str == "Último disponível" or not anos_use:
+        ano = anos_use[0] if anos_use else (anos_all[0] if anos_all else 0)
+    else:
+        ano_int = int(ano_sel_str)
+        ano = ano_int if ano_int in anos_use else (anos_use[0] if anos_use else ano_int)
 
     return str(cod_ibge), nome_mun, int(ano)
 
@@ -1423,28 +1474,30 @@ def _val_br_ano(df: pd.DataFrame, ano: int, padrao: str) -> float | None:
     return float(vals.mean()) if not vals.empty else None
 
 
-def _render_dim_header(df_full: pd.DataFrame, cod_ibge: str, ano: int, titulo: str, fonte_txt: str):
-    idhm = extract_latest_mun_value(df_full, cod_ibge, r"\bIDHM\b", ano_ref=ano)
-    pob = extract_latest_mun_value(df_full, cod_ibge, r"Crian[çc]as <5 anos em pobreza", ano_ref=ano)
-    ext = extract_latest_mun_value(df_full, cod_ibge, r"Crian[çc]as <5 anos em extrema pobreza", ano_ref=ano)
-    urb = extract_latest_mun_value(df_full, cod_ibge, r"situa[çc][aã]o urbano-rural|[áa]rea urbana", ano_ref=ano)
-    idhm = _normalize_display_value("IDHM", idhm)
+def _render_dim_header(df_full: pd.DataFrame, cod_ibge: str | None, ano: int, titulo: str, fonte_txt: str):
+    if cod_ibge:
+        idhm = _normalize_display_value("IDHM", extract_latest_mun_value(df_full, cod_ibge, r"\bIDHM\b", ano_ref=ano))
+        pob = extract_latest_mun_value(df_full, cod_ibge, r"Crian[çc]as <5 anos em pobreza", ano_ref=ano)
+        ext = extract_latest_mun_value(df_full, cod_ibge, r"Crian[çc]as <5 anos em extrema pobreza", ano_ref=ano)
+        urb = extract_latest_mun_value(df_full, cod_ibge, r"situa[çc][aã]o urbano-rural|[áa]rea urbana", ano_ref=ano)
+    else:
+        idhm = pob = ext = urb = None
 
     c_title, c_metrics = st.columns([3, 1.6], gap="small")
     with c_title:
         st.markdown(
-            f'<div style="font-family:Playfair Display,serif;font-size:2.0rem;color:#e85c41;line-height:1.1;">{titulo}</div>'
-            f'<div style="font-size:.64rem;color:#aab0bb;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;">{fonte_txt}</div>',
+            f'<div style="font-family:Playfair Display,serif;font-size:2.1rem;color:#EF817D;line-height:1.1;font-weight:700;">{titulo}</div>'
+            f'<div style="font-size:.78rem;color:#808080;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;">{fonte_txt}</div>',
             unsafe_allow_html=True,
         )
     with c_metrics:
         st.markdown(
             f"""
             <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
-              <div class="pi-kpi-card" style="min-width:86px;min-height:52px;padding:6px 8px;"><div class="pi-kpi-label">IDHM</div><div class="pi-kpi-value" style="font-size:1rem;color:#27ae60">{fmt_num(idhm,3)}</div></div>
-              <div class="pi-kpi-card" style="min-width:86px;min-height:52px;padding:6px 8px;"><div class="pi-kpi-label">Pobreza Inf.</div><div class="pi-kpi-value" style="font-size:1rem;color:#e67e22">{fmt_num(pob,0)}</div></div>
-              <div class="pi-kpi-card" style="min-width:86px;min-height:52px;padding:6px 8px;"><div class="pi-kpi-label">Extrema Pob.</div><div class="pi-kpi-value" style="font-size:1rem;color:#e67e22">{fmt_num(ext,0)}</div></div>
-              <div class="pi-kpi-card" style="min-width:86px;min-height:52px;padding:6px 8px;"><div class="pi-kpi-label">Área Urbana</div><div class="pi-kpi-value" style="font-size:1rem;color:#2a5abf">{fmt_num(urb,1,' %')}</div></div>
+              <div class="pi-kpi-card" style="min-width:90px;min-height:56px;padding:7px 10px;"><div class="pi-kpi-label">IDHM</div><div class="pi-kpi-value" style="font-size:1.05rem;color:#5E8C2A">{fmt_num(idhm,3)}</div></div>
+              <div class="pi-kpi-card" style="min-width:90px;min-height:56px;padding:7px 10px;"><div class="pi-kpi-label">Pobreza Inf.</div><div class="pi-kpi-value" style="font-size:1.05rem;color:#C97C1A">{fmt_num(pob,0)}</div></div>
+              <div class="pi-kpi-card" style="min-width:90px;min-height:56px;padding:7px 10px;"><div class="pi-kpi-label">Extrema Pob.</div><div class="pi-kpi-value" style="font-size:1.05rem;color:#C97C1A">{fmt_num(ext,0)}</div></div>
+              <div class="pi-kpi-card" style="min-width:90px;min-height:56px;padding:7px 10px;"><div class="pi-kpi-label">Área Urbana</div><div class="pi-kpi-value" style="font-size:1.05rem;color:#034EA2">{fmt_num(urb,1,' %')}</div></div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -1489,17 +1542,17 @@ def _render_bullet_bars(rows: list[dict]) -> None:
         ref_txt = f"Ref. PI: {_fv(pi_v)}" if pi_v is not None else ""
 
         bars_html += (
-            f'<div style="margin-bottom:12px">'
-            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px">'
-            f'<span style="font-size:9px;font-weight:600;color:#3a4558;max-width:72%;line-height:1.35">{nome}</span>'
-            f'<span style="font-size:10.5px;font-weight:800;color:{fg_badge};white-space:nowrap">{val_txt}</span>'
+            f'<div style="margin-bottom:14px">'
+            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+            f'<span style="font-size:12px;font-weight:600;color:#4C4C4F;max-width:72%;line-height:1.35">{nome}</span>'
+            f'<span style="font-size:13px;font-weight:800;color:{fg_badge};white-space:nowrap">{val_txt}</span>'
             f'</div>'
-            f'<div style="position:relative;height:8px;background:#f0f2f5;border-radius:4px;margin-bottom:3px">'
-            f'<div style="height:100%;width:{fill:.1f}%;background:{fg_badge};opacity:0.65;border-radius:4px;transition:width .3s"></div>'
+            f'<div style="position:relative;height:9px;background:#E8E8E8;border-radius:5px;margin-bottom:4px">'
+            f'<div style="height:100%;width:{fill:.1f}%;background:{fg_badge};opacity:0.7;border-radius:5px;transition:width .3s"></div>'
             f'</div>'
             f'<div style="display:flex;justify-content:space-between;align-items:center">'
-            f'<span style="font-size:8px;color:#aab0bb">{ref_txt}</span>'
-            f'<span style="background:{bg_badge};color:{fg_badge};font-size:8px;font-weight:700;padding:0 6px;border-radius:3px">{label}</span>'
+            f'<span style="font-size:11px;color:#808080">{ref_txt}</span>'
+            f'<span style="background:{bg_badge};color:{fg_badge};font-size:11px;font-weight:700;padding:1px 7px;border-radius:4px">{label}</span>'
             f'</div>'
             f'</div>'
         )
@@ -1593,41 +1646,48 @@ def render_dimensao(
     df_full = df.copy()
     eixo_regex_by_dim = {
         "saude": r"sa[úu]de",
-        "alimentacao": r"nutri[çc][aã]o|alimenta[çc][aã]o",
+        "alimentacao": r"nutri[çc][aã]o|alimenta[çc][aã]o|sa[úu]de",
         "aprendizagem": r"educa[çc][aã]o|aprendizagem",
         "protecao": r"prote[çc][aã]o|seguran[çc]a",
         "cuidado": r"assist[eê]ncia|cuidado",
     }
     titulo_fonte = {
         "saude": ("Saúde e Bem-estar", "SIM · SINASC · SI-PNI · SINAN · SINISA"),
-        "alimentacao": ("Nutrição", "SISVAN · SIM"),
+        "alimentacao": ("Nutrição e Alimentação", "SISVAN · SIM"),
         "aprendizagem": ("Oportunidades de Aprendizagem", "Censo Educacional · INEP · SAEB · SAEPI"),
         "protecao": ("Segurança e Proteção", "SINAN · PNAD Contínua · SIPIA-CT · SUAS"),
         "cuidado": ("Cuidado Responsivo", "Registro Civil · CadÚnico · CNES · SAGICAD"),
     }
 
-    dfx = df.copy()
+    # Constrói dfx como união de: filtro por eixo + filtro por padrões dos subtemas
+    all_subpats = [p for _, p in subtemas_resultado] + [p for _, p in subtemas_esforco]
+    pat_union_sub = "|".join([f"(?:{p})" for p in all_subpats if p])
     dim_regex = eixo_regex_by_dim.get(dimensao)
+    frames = []
     if dim_regex:
-        mask_dim = dfx["eixo"].astype(str).str.contains(dim_regex, case=False, regex=True, na=False)
+        mask_dim = df["eixo"].astype(str).str.contains(dim_regex, case=False, regex=True, na=False)
         if mask_dim.any():
-            dfx = dfx.loc[mask_dim].copy()
-        else:
-            all_patterns = [p for _, p in subtemas_resultado] + [p for _, p in subtemas_esforco]
-            pat_union = "|".join([f"(?:{p})" for p in all_patterns if p])
-            if pat_union:
-                dfx = dfx.loc[dfx["indicador"].astype(str).str.contains(pat_union, case=False, regex=True, na=False)].copy()
+            frames.append(df.loc[mask_dim].copy())
+    if pat_union_sub:
+        mask_pat = df["indicador"].astype(str).str.contains(pat_union_sub, case=False, regex=True, na=False)
+        if mask_pat.any():
+            frames.append(df.loc[mask_pat].copy())
+    dfx = pd.concat(frames).drop_duplicates() if frames else df.copy()
+    if dfx.empty:
+        dfx = df.copy()
 
     if dfx.empty:
         st.warning("Sem dados disponíveis para esta dimensão no banco atual.")
         return
 
     cod_ibge, nome_mun, ano = _seletores_mun_ano(dfx, key_prefix=dimensao)
-    pop_06 = extract_latest_mun_value(df_full, cod_ibge, r"Popula[çc][aã]o entre 0 a 6 anos|pop\.?\s*0.?6", ano_ref=ano)
-    _ctx_bar(nome_mun, int(pop_06) if pop_06 is not None and pop_06 >= 1 else None, ano)
+    is_estado = cod_ibge == _MUN_ESTADO_CODE
+    display_nome = "Piauí (Estado)" if is_estado else nome_mun
+    pop_06 = None if is_estado else extract_latest_mun_value(df_full, cod_ibge, r"Popula[çc][aã]o entre 0 a 6 anos|pop\.?\s*0.?6", ano_ref=ano)
+    _ctx_bar(display_nome, int(pop_06) if pop_06 is not None and pop_06 >= 1 else None, ano)
     ttl, fonte = titulo_fonte.get(dimensao, ("Painel", ""))
-    _render_dim_header(df_full, cod_ibge, ano, ttl, fonte)
-    st.caption(f"Série disponível nesta dimensão: {int(dfx['ano'].min())}–{int(dfx['ano'].max())}.")
+    _render_dim_header(df_full, cod_ibge if not is_estado else None, ano, ttl, fonte)
+    st.caption(f"Série disponível nesta dimensão: {int(dfx['ano'].min())}–{int(dfx['ano'].max())}. O gráfico exibe toda a série histórica.")
 
     def _subtemas_com_dados(lista: list[tuple[str, str]]) -> list[tuple[str, str]]:
         validos = []
@@ -1654,7 +1714,11 @@ def render_dimensao(
     def _render_situacao_table(inds: list[str], ano_use: int):
         rows = []
         for ind in inds:
-            mun_v = _val_mun_ano(dfx, cod_ibge, ano_use, re.escape(ind))
+            if is_estado:
+                # Visão estado: usa média PI como valor principal
+                mun_v = _val_pi_ano(dfx, ano_use, re.escape(ind))
+            else:
+                mun_v = _val_mun_ano(dfx, cod_ibge, ano_use, re.escape(ind))
             pi_v  = _val_pi_ano(dfx, ano_use, re.escape(ind)) or _ind_ref_pi(ind)
             br_v  = _val_br_ano(dfx, ano_use, re.escape(ind))
             mun_v = _normalize_display_value(ind, mun_v)
@@ -1685,7 +1749,8 @@ def render_dimensao(
                     _render_situacao_table(_inds_r, _ano_r)
             with _c_rr:
                 with st.container(border=True):
-                    _section_header("Série Histórica", "Município vs Piauí", cor_resultado)
+                    hist_label = "Tendência — Piauí (Estado)" if is_estado else "Série Histórica — Município vs Piauí"
+                    _section_header(hist_label, "Evolução histórica", cor_resultado)
                     _ind_r = st.selectbox(
                         "Indicador",
                         _inds_r if _inds_r else ["Sem dados"],
@@ -1693,28 +1758,34 @@ def render_dimensao(
                         label_visibility="collapsed",
                     )
                     if _ind_r != "Sem dados":
-                        s_mun = _serie_mun(dfx, cod_ibge, re.escape(_ind_r))
                         s_pi  = _serie_uf(dfx, re.escape(_ind_r))
                         s_br  = _serie_br(dfx, re.escape(_ind_r))
+                        if is_estado:
+                            s_mun = s_pi
+                            serie_trend = s_pi
+                        else:
+                            s_mun = _serie_mun(dfx, cod_ibge, re.escape(_ind_r))
+                            serie_trend = s_mun
                         tbadge, tcss = trend_badge(
-                            s_mun["valor"] if not s_mun.empty else pd.Series([], dtype=float),
+                            serie_trend["valor"] if not serie_trend.empty else pd.Series([], dtype=float),
                             sentido=_ind_cls(_ind_r),
                         )
                         st.markdown(
                             f'<span class="pi-badge {tcss}" style="margin-bottom:6px;display:inline-block;">{tbadge}</span>',
                             unsafe_allow_html=True,
                         )
-                        fig = _chart_linha(s_mun, s_pi, s_br, _ind_r, cor_resultado, nome_mun)
+                        fig = _chart_linha(s_mun, s_pi, s_br, _ind_r, cor_resultado, display_nome)
                         if fig is not None:
                             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
                         else:
-                            _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
-                        fig_dist = _chart_distribuicao_pi(
-                            dfx, cod_ibge, nome_mun, re.escape(_ind_r), cor_resultado
-                        )
-                        if fig_dist is not None:
-                            st.plotly_chart(fig_dist, use_container_width=True,
-                                            config={"displayModeBar": False})
+                            _render_line_fallback(s_mun, s_pi, s_br, display_nome)
+                        if not is_estado:
+                            fig_dist = _chart_distribuicao_pi(
+                                dfx, cod_ibge, nome_mun, re.escape(_ind_r), cor_resultado
+                            )
+                            if fig_dist is not None:
+                                st.plotly_chart(fig_dist, use_container_width=True,
+                                                config={"displayModeBar": False})
                     else:
                         st.info("Sem dados para série histórica.")
 
@@ -1735,7 +1806,8 @@ def render_dimensao(
                     _render_situacao_table(_inds_e, _ano_e)
             with _c_er:
                 with st.container(border=True):
-                    _section_header("Série Histórica", "Município vs Piauí", cor_esforco)
+                    hist_label_e = "Tendência — Piauí (Estado)" if is_estado else "Série Histórica — Município vs Piauí"
+                    _section_header(hist_label_e, "Evolução histórica", cor_esforco)
                     _ind_e = st.selectbox(
                         "Indicador",
                         _inds_e if _inds_e else ["Sem dados"],
@@ -1743,28 +1815,34 @@ def render_dimensao(
                         label_visibility="collapsed",
                     )
                     if _ind_e != "Sem dados":
-                        s_mun = _serie_mun(dfx, cod_ibge, re.escape(_ind_e))
                         s_pi  = _serie_uf(dfx, re.escape(_ind_e))
                         s_br  = _serie_br(dfx, re.escape(_ind_e))
+                        if is_estado:
+                            s_mun = s_pi
+                            serie_trend_e = s_pi
+                        else:
+                            s_mun = _serie_mun(dfx, cod_ibge, re.escape(_ind_e))
+                            serie_trend_e = s_mun
                         tbadge, tcss = trend_badge(
-                            s_mun["valor"] if not s_mun.empty else pd.Series([], dtype=float),
+                            serie_trend_e["valor"] if not serie_trend_e.empty else pd.Series([], dtype=float),
                             sentido=_ind_cls(_ind_e),
                         )
                         st.markdown(
                             f'<span class="pi-badge {tcss}" style="margin-bottom:6px;display:inline-block;">{tbadge}</span>',
                             unsafe_allow_html=True,
                         )
-                        fig = _chart_linha(s_mun, s_pi, s_br, _ind_e, cor_esforco, nome_mun)
+                        fig = _chart_linha(s_mun, s_pi, s_br, _ind_e, cor_esforco, display_nome)
                         if fig is not None:
                             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
                         else:
-                            _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
-                        fig_dist = _chart_distribuicao_pi(
-                            dfx, cod_ibge, nome_mun, re.escape(_ind_e), cor_esforco
-                        )
-                        if fig_dist is not None:
-                            st.plotly_chart(fig_dist, use_container_width=True,
-                                            config={"displayModeBar": False})
+                            _render_line_fallback(s_mun, s_pi, s_br, display_nome)
+                        if not is_estado:
+                            fig_dist = _chart_distribuicao_pi(
+                                dfx, cod_ibge, nome_mun, re.escape(_ind_e), cor_esforco
+                            )
+                            if fig_dist is not None:
+                                st.plotly_chart(fig_dist, use_container_width=True,
+                                                config={"displayModeBar": False})
                     else:
                         st.info("Sem dados para série histórica.")
 
@@ -1789,8 +1867,8 @@ def render_alimentacao(df: pd.DataFrame):
     render_dimensao(
         df=df,
         dimensao="alimentacao",
-        cor_resultado="#9b59b6",
-        cor_esforco="#16a085",
+        cor_resultado="#ADCC6B",
+        cor_esforco="#2260B8",
         subtemas_resultado=DIMENSAO_SUBTEMAS["Alimentação"],
         subtemas_esforco=[
             ("Acompanhamento Nutricional",
@@ -1805,8 +1883,8 @@ def render_aprendizagem(df: pd.DataFrame):
     render_dimensao(
         df=df,
         dimensao="aprendizagem",
-        cor_resultado="#f39c12",
-        cor_esforco="#2980b9",
+        cor_resultado="#F4A94E",
+        cor_esforco="#5282C2",
         subtemas_resultado=DIMENSAO_SUBTEMAS["Aprendizagem"],
         subtemas_esforco=[
             ("Creche (0–3 anos)",
@@ -1821,8 +1899,8 @@ def render_protecao(df: pd.DataFrame):
     render_dimensao(
         df=df,
         dimensao="protecao",
-        cor_resultado="#c0392b",
-        cor_esforco="#8e44ad",
+        cor_resultado="#EF817D",
+        cor_esforco="#4147D5",
         subtemas_resultado=DIMENSAO_SUBTEMAS["Proteção"],
         subtemas_esforco=[
             ("Notificações",
@@ -1837,8 +1915,8 @@ def render_cuidado(df: pd.DataFrame):
     render_dimensao(
         df=df,
         dimensao="cuidado",
-        cor_resultado="#27ae60",
-        cor_esforco="#1a7a50",
+        cor_resultado="#ADCC6B",
+        cor_esforco="#034EA2",
         subtemas_resultado=DIMENSAO_SUBTEMAS["Cuidado"],
         subtemas_esforco=[
             ("Transferência de Renda",
@@ -2568,19 +2646,27 @@ def render_perfil(df: pd.DataFrame):
     _render_contexto_nav("Perfil")
 
     cod_ibge, nome_mun, ano = _seletores_mun_ano(df, key_prefix="perfil")
-    pop_06 = extract_latest_mun_value(df, cod_ibge, r"Popula[çc][aã]o entre 0 a 6 anos|pop\.?\s*0.?6", ano_ref=ano)
-    _ctx_bar(nome_mun, int(pop_06) if pop_06 is not None and pop_06 >= 1 else None, ano)
-    _render_dim_header(df, cod_ibge, ano, "Perfil do Município", "SIM · SINASC · SINAN · SISVAN · Censo Escolar · SNIS · CadÚnico")
+    is_estado_p = cod_ibge == _MUN_ESTADO_CODE
+    display_nome_p = "Piauí (Estado)" if is_estado_p else nome_mun
+    pop_06 = None if is_estado_p else extract_latest_mun_value(df, cod_ibge, r"Popula[çc][aã]o entre 0 a 6 anos|pop\.?\s*0.?6", ano_ref=ano)
+    _ctx_bar(display_nome_p, int(pop_06) if pop_06 is not None and pop_06 >= 1 else None, ano)
+    _render_dim_header(df, cod_ibge if not is_estado_p else None, ano, "Perfil do Município", "SIM · SINASC · SINAN · SISVAN · Censo Escolar · SNIS · CadÚnico")
 
-    dff = df[(df["cod_ibge"] == cod_ibge) & (df["ano"] == ano)].copy()
+    if is_estado_p:
+        dff = df[df["ano"] == ano].copy()
+    else:
+        dff = df[(df["cod_ibge"] == cod_ibge) & (df["ano"] == ano)].copy()
 
     st.markdown('<div style="height:6px"></div>', unsafe_allow_html=True)
 
     k1, k2, k3, k4 = st.columns(4)
-    idhm = _normalize_display_value("IDHM", extract_latest_mun_value(df, cod_ibge, r"\bIDHM\b", ano_ref=ano))
-    pob  = extract_latest_mun_value(df, cod_ibge, r"Crian[çc]as <5 anos em pobreza", ano_ref=ano)
-    ext  = extract_latest_mun_value(df, cod_ibge, r"Crian[çc]as <5 anos em extrema pobreza", ano_ref=ano)
-    urb  = extract_latest_mun_value(df, cod_ibge, r"situa[çc][aã]o urbano-rural|[áa]rea urbana", ano_ref=ano)
+    if is_estado_p:
+        idhm = pob = ext = urb = None
+    else:
+        idhm = _normalize_display_value("IDHM", extract_latest_mun_value(df, cod_ibge, r"\bIDHM\b", ano_ref=ano))
+        pob  = extract_latest_mun_value(df, cod_ibge, r"Crian[çc]as <5 anos em pobreza", ano_ref=ano)
+        ext  = extract_latest_mun_value(df, cod_ibge, r"Crian[çc]as <5 anos em extrema pobreza", ano_ref=ano)
+        urb  = extract_latest_mun_value(df, cod_ibge, r"situa[çc][aã]o urbano-rural|[áa]rea urbana", ano_ref=ano)
     with k1:
         kpi_card("IDHM", fmt_num(idhm, 3), f"Ref. {ano}")
     with k2:
@@ -2598,7 +2684,7 @@ def render_perfil(df: pd.DataFrame):
 
     with col_left:
         with st.container(border=True):
-            _section_header("Indicadores por Dimensão", f"Ano {ano} — Mun. vs Referência PI", "#2a5abf")
+            _section_header("Indicadores por Dimensão", f"Ano {ano} — Mun. vs Referência PI", "#034EA2")
             if dff.empty:
                 st.info("Sem dados para este município / ano.")
             else:
