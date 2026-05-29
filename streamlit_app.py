@@ -917,11 +917,12 @@ def render_capa_html_navegavel():
     st.markdown(
         f"""
 <style>
-  [data-testid="stAppViewContainer"] {{ background:#0b1d3f !important; }}
+  [data-testid="stAppViewContainer"], [data-testid="stMain"],
+  section[data-testid="stMain"] > div {{ background:#f7f7f8 !important; }}
   [data-testid="stToolbar"], [data-testid="stStatusWidget"],
   #MainMenu, footer, header {{ display:none !important; visibility:hidden !important; }}
   .main .block-container {{ max-width:100vw !important; padding:0 !important; margin:0 !important; }}
-  .capa-outer {{ width:100vw; min-height:100vh; background:#0b1d3f; display:flex; align-items:stretch; justify-content:center; }}
+  .capa-outer {{ width:100vw; min-height:100vh; background:#f7f7f8; display:flex; align-items:stretch; justify-content:center; }}
   .capa-card  {{ width:100vw; max-width:100vw; min-height:100vh; display:flex; background:transparent; }}
   .capa-left  {{ flex:1.2; background:#f7f7f8; padding:46px 56px 28px 56px; display:flex; flex-direction:column; }}
   .capa-right {{ flex:1; background:#e8dbc9; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }}
@@ -954,13 +955,13 @@ def render_capa_html_navegavel():
     <p class="capa-sub">Painel de acompanhamento para leitura integrada dos indicadores da primeira infância no território piauiense.</p>
     <div class="capa-caption">Explore os painéis</div>
     <div class="capa-nav">
-      <a class="capa-pill active" href="?page=VisaoGeral&pagina_ativa=Vis%C3%A3o+Geral">Visão Geral</a>
-      <a class="capa-pill" href="?page=Perfil&pagina_ativa=Perfil+do+Munic%C3%ADpio">Perfil do Município</a>
-      <a class="capa-pill" href="?page=Saude&pagina_ativa=Sa%C3%BAde+e+Bem-estar">Saúde e Bem-estar</a>
-      <a class="capa-pill" href="?page=Alimentacao&pagina_ativa=Alimenta%C3%A7%C3%A3o">Alimentação</a>
-      <a class="capa-pill" href="?page=Aprendizagem&pagina_ativa=Aprendizagem">Aprendizagem</a>
-      <a class="capa-pill" href="?page=Protecao&pagina_ativa=Prote%C3%A7%C3%A3o">Proteção</a>
-      <a class="capa-pill" href="?page=Cuidado&pagina_ativa=Cuidado">Cuidado</a>
+      <a class="capa-pill" href="?page=VisaoGeral&pagina_ativa=Vis%C3%A3o+Geral" target="_self">Visão Geral</a>
+      <a class="capa-pill" href="?page=Perfil&pagina_ativa=Perfil+do+Munic%C3%ADpio" target="_self">Perfil do Município</a>
+      <a class="capa-pill" href="?page=Saude&pagina_ativa=Sa%C3%BAde+e+Bem-estar" target="_self">Saúde e Bem-estar</a>
+      <a class="capa-pill" href="?page=Alimentacao&pagina_ativa=Alimenta%C3%A7%C3%A3o" target="_self">Alimentação</a>
+      <a class="capa-pill" href="?page=Aprendizagem&pagina_ativa=Aprendizagem" target="_self">Aprendizagem</a>
+      <a class="capa-pill" href="?page=Protecao&pagina_ativa=Prote%C3%A7%C3%A3o" target="_self">Proteção</a>
+      <a class="capa-pill" href="?page=Cuidado&pagina_ativa=Cuidado" target="_self">Cuidado</a>
     </div>
     <div class="capa-footer">
       <img src="{gov_uri}" alt="Governo do Piauí" style="height:62px;width:auto;" />
@@ -1450,6 +1451,137 @@ def _render_dim_header(df_full: pd.DataFrame, cod_ibge: str, ano: int, titulo: s
         )
 
 
+def _render_bullet_bars(rows: list[dict]) -> None:
+    """Barras horizontais estilo Power BI: valor real + barra de desempenho vs referência PI."""
+    if not rows:
+        st.info("Sem dados para este subtema / ano.")
+        return
+    bars_html = ""
+    for r in rows:
+        mun_v  = r.get("mun")
+        pi_v   = r.get("pi") or _ind_ref_pi(r.get("nome", ""))
+        fmt    = r.get("fmt", "{:.1f}")
+        sentido = r.get("sentido", "pior")
+        nome   = r.get("nome", "")
+
+        label, bg_badge, fg_badge = status_badge(mun_v, pi_v, sentido)
+
+        if mun_v is not None and pi_v is not None and pi_v != 0:
+            ratio = mun_v / pi_v
+            if sentido == "pior":
+                fill = max(0, min(100, (2.0 - min(ratio, 2.0)) * 50))
+            else:
+                fill = max(0, min(100, min(ratio, 2.0) * 50))
+        elif mun_v is not None:
+            fill = 50
+        else:
+            fill = 0
+
+        def _fv(v):
+            if v is None or (isinstance(v, float) and pd.isna(v)):
+                return "n/d"
+            try:
+                return fmt.format(v).replace(".", ",")
+            except Exception:
+                return str(v)
+
+        val_txt = _fv(mun_v)
+        ref_txt = f"Ref. PI: {_fv(pi_v)}" if pi_v is not None else ""
+
+        bars_html += (
+            f'<div style="margin-bottom:12px">'
+            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px">'
+            f'<span style="font-size:9px;font-weight:600;color:#3a4558;max-width:72%;line-height:1.35">{nome}</span>'
+            f'<span style="font-size:10.5px;font-weight:800;color:{fg_badge};white-space:nowrap">{val_txt}</span>'
+            f'</div>'
+            f'<div style="position:relative;height:8px;background:#f0f2f5;border-radius:4px;margin-bottom:3px">'
+            f'<div style="height:100%;width:{fill:.1f}%;background:{fg_badge};opacity:0.65;border-radius:4px;transition:width .3s"></div>'
+            f'</div>'
+            f'<div style="display:flex;justify-content:space-between;align-items:center">'
+            f'<span style="font-size:8px;color:#aab0bb">{ref_txt}</span>'
+            f'<span style="background:{bg_badge};color:{fg_badge};font-size:8px;font-weight:700;padding:0 6px;border-radius:3px">{label}</span>'
+            f'</div>'
+            f'</div>'
+        )
+    st.markdown(f'<div style="padding:4px 2px">{bars_html}</div>', unsafe_allow_html=True)
+
+
+def _chart_distribuicao_pi(
+    dfx: pd.DataFrame,
+    cod_ibge: str,
+    nome_mun: str,
+    padrao: str,
+    cor_mun: str,
+    height: int = 180,
+) -> "go.Figure | None":
+    """Scatter: todos os municípios PI para um indicador — destaca o município selecionado."""
+    if not PLOTLY_OK:
+        return None
+    mask = dfx["indicador"].astype(str).str.contains(padrao, case=False, regex=True, na=False)
+    df_ind = dfx[mask].copy()
+    if df_ind.empty:
+        return None
+    ano_lat = int(pd.to_numeric(df_ind["ano"], errors="coerce").dropna().max())
+    df_yr = (
+        df_ind[df_ind["ano"] == ano_lat]
+        .groupby(["cod_ibge", "municipio"], as_index=False)["valor"]
+        .mean()
+    )
+    df_yr["valor"] = pd.to_numeric(df_yr["valor"], errors="coerce")
+    df_yr = df_yr.dropna(subset=["valor"]).sort_values("valor").reset_index(drop=True)
+    n = len(df_yr)
+    if n < 3:
+        return None
+    df_yr["rank"]   = range(1, n + 1)
+    df_yr["is_sel"] = df_yr["cod_ibge"].astype(str) == str(cod_ibge)
+    rank_mun = int(df_yr.loc[df_yr["is_sel"], "rank"].iloc[0]) if df_yr["is_sel"].any() else None
+
+    fig = go.Figure()
+    others = df_yr[~df_yr["is_sel"]]
+    sel    = df_yr[df_yr["is_sel"]]
+
+    fig.add_trace(go.Scatter(
+        x=others["rank"], y=others["valor"],
+        mode="markers",
+        marker=dict(size=5, color="#dce3ed"),
+        name="Outros municípios PI",
+        hovertemplate="%{customdata}<br>Rank: %{x}<br>Valor: %{y:.2f}<extra></extra>",
+        customdata=others["municipio"],
+    ))
+    if not sel.empty:
+        fig.add_trace(go.Scatter(
+            x=sel["rank"], y=sel["valor"],
+            mode="markers+text",
+            marker=dict(size=12, color=cor_mun, symbol="diamond",
+                        line=dict(width=2, color="#ffffff")),
+            text=[f"  {nome_mun[:14]}"],
+            textposition="middle right",
+            textfont=dict(size=8, color=cor_mun, family="Inter, Segoe UI, sans-serif"),
+            name=nome_mun,
+            hovertemplate=(
+                f"{nome_mun}<br>Rank: {rank_mun}/{n}<br>Valor: %{{y:.2f}}<extra></extra>"
+            ),
+        ))
+
+    rank_label = f"Posição {rank_mun}/{n}" if rank_mun else f"{n} municípios"
+    fig.update_layout(
+        height=height,
+        title=dict(
+            text=f"Distribuição PI · {rank_label}",
+            font=dict(size=9, color="#5a6478", family="Inter, Segoe UI, sans-serif"),
+            x=0, y=0.97,
+        ),
+        xaxis=dict(title="Ranking", gridcolor="#f0f2f5", showticklabels=False),
+        yaxis=dict(gridcolor="#f0f2f5"),
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=4, r=4, t=22, b=4),
+        font=dict(family="Inter, Segoe UI, sans-serif", size=9, color="#5a6478"),
+    )
+    return fig
+
+
 def render_dimensao(
     df: pd.DataFrame,
     dimensao: str,
@@ -1523,11 +1655,11 @@ def render_dimensao(
         rows = []
         for ind in inds:
             mun_v = _val_mun_ano(dfx, cod_ibge, ano_use, re.escape(ind))
-            pi_v = _val_pi_ano(dfx, ano_use, re.escape(ind))
-            br_v = _val_br_ano(dfx, ano_use, re.escape(ind))
+            pi_v  = _val_pi_ano(dfx, ano_use, re.escape(ind)) or _ind_ref_pi(ind)
+            br_v  = _val_br_ano(dfx, ano_use, re.escape(ind))
             mun_v = _normalize_display_value(ind, mun_v)
-            pi_v = _normalize_display_value(ind, pi_v)
-            br_v = _normalize_display_value(ind, br_v)
+            pi_v  = _normalize_display_value(ind, pi_v)
+            br_v  = _normalize_display_value(ind, br_v)
             rows.append({
                 "nome": ind,
                 "mun": mun_v,
@@ -1536,10 +1668,7 @@ def render_dimensao(
                 "fmt": _ind_fmt(ind),
                 "sentido": _ind_cls(ind),
             })
-        if rows:
-            _tabela_comp_desvio(rows)
-        else:
-            st.info("Sem dados para este subtema / ano.")
+        _render_bullet_bars(rows)
 
     # RESULTADOS
     _section_header("Resultados", "Situação atual e série histórica", cor_resultado)
@@ -1580,6 +1709,12 @@ def render_dimensao(
                             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
                         else:
                             _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
+                        fig_dist = _chart_distribuicao_pi(
+                            dfx, cod_ibge, nome_mun, re.escape(_ind_r), cor_resultado
+                        )
+                        if fig_dist is not None:
+                            st.plotly_chart(fig_dist, use_container_width=True,
+                                            config={"displayModeBar": False})
                     else:
                         st.info("Sem dados para série histórica.")
 
@@ -1624,6 +1759,12 @@ def render_dimensao(
                             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
                         else:
                             _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
+                        fig_dist = _chart_distribuicao_pi(
+                            dfx, cod_ibge, nome_mun, re.escape(_ind_e), cor_esforco
+                        )
+                        if fig_dist is not None:
+                            st.plotly_chart(fig_dist, use_container_width=True,
+                                            config={"displayModeBar": False})
                     else:
                         st.info("Sem dados para série histórica.")
 
