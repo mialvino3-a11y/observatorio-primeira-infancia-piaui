@@ -1761,6 +1761,48 @@ def _score_eixo(df: pd.DataFrame, cod_ibge: str, ano: int,
     return float(sum(pontos) / len(pontos)) if pontos else None
 
 
+@st.cache_data(ttl=600, show_spinner=False)
+def _compute_all_scores(df: pd.DataFrame) -> pd.DataFrame:
+    """Score composto (0-100) para todos os municípios, vetorizado."""
+    if df.empty:
+        return pd.DataFrame()
+    anos_disp = sorted(df["ano"].dropna().astype(int).unique().tolist(), reverse=True)
+    # Usa os 3 anos mais recentes e pega o valor mais atual por (mun, indicador)
+    frames = [df[df["ano"] == a] for a in anos_disp[:3] if a in df["ano"].values]
+    if not frames:
+        return pd.DataFrame()
+    dfs = pd.concat(frames, ignore_index=True).copy()
+    dfs["cod_ibge"] = dfs["cod_ibge"].astype(str)
+    dfs["valor_n"] = pd.to_numeric(dfs["valor"], errors="coerce")
+    dfs = dfs.sort_values("ano", ascending=False).drop_duplicates(
+        subset=["cod_ibge", "indicador"], keep="first"
+    )
+    mun_ref = dfs[["cod_ibge", "municipio"]].drop_duplicates("cod_ibge").copy()
+    eixo_keys = ["saude", "nut", "edu", "seg", "cuid"]
+    for eixo_key, (_, _, inds) in zip(eixo_keys, EIXOS_VISAO_GERAL):
+        col_pts: dict[str, list] = {}
+        for padrao, ref_pi, cls in inds:
+            mask = dfs["indicador"].astype(str).str.contains(
+                padrao, case=False, regex=True, na=False
+            )
+            sub = dfs[mask].groupby("cod_ibge")["valor_n"].mean()
+            for cod6, val in sub.items():
+                if pd.isna(val) or ref_pi == 0:
+                    continue
+                ratio = val / ref_pi
+                p = (20 if ratio > 1.10 else (50 if ratio > 1.02 else 80)) if cls == "pior" \
+                    else (20 if ratio < 0.90 else (50 if ratio < 0.97 else 80))
+                col_pts.setdefault(cod6, []).append(p)
+        score_map = {c: round(sum(pts) / len(pts)) for c, pts in col_pts.items() if pts}
+        mun_ref[f"score_{eixo_key}"] = mun_ref["cod_ibge"].map(score_map)
+    score_cols = [f"score_{k}" for k in eixo_keys]
+    mun_ref["score_geral"] = mun_ref[score_cols].apply(
+        lambda row: round(row.dropna().mean()) if not row.dropna().empty else None,
+        axis=1,
+    )
+    return mun_ref.reset_index(drop=True)
+
+
 def _render_contexto_nav(active_page: str):
     itens = [
         ("Visão Geral", "VisaoGeral"),
@@ -1776,7 +1818,7 @@ def _render_contexto_nav(active_page: str):
     )
 
 
-def _build_visao_geral_html(geo_js: str, mi_js: str, mc_js: str) -> str:
+def _build_visao_geral_html_UNUSED(geo_js: str, mi_js: str, mc_js: str) -> str:  # kept for reference only
     return f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2147,89 +2189,237 @@ def render_visao_geral(df: pd.DataFrame):
 
     _render_contexto_nav("VisaoGeral")
 
-    MUN_META = {
-        'teresina': {'nome': 'Teresina',         'ibge7': '2211001', 'ibge6': '221100'},
-        'parnaiba': {'nome': 'Parnaíba',          'ibge7': '2207702', 'ibge6': '220770'},
-        'picos':    {'nome': 'Picos',             'ibge7': '2208007', 'ibge6': '220800'},
-        'floriano': {'nome': 'Floriano',          'ibge7': '2203909', 'ibge6': '220390'},
-        'oeiras':   {'nome': 'Oeiras',            'ibge7': '2207009', 'ibge6': '220700'},
-        'srnona':   {'nome': 'S. R. Nonato',      'ibge7': '2209401', 'ibge6': '220940'},
-        'piripiri': {'nome': 'Piripiri',          'ibge7': '2208403', 'ibge6': '220840'},
-        'barras':   {'nome': 'Barras',            'ibge7': '2201200', 'ibge6': '220120'},
-        'campogr':  {'nome': 'Campo Grande',      'ibge7': '2202117', 'ibge6': '220211'},
-        'guaribas': {'nome': 'Guaribas',          'ibge7': '2204550', 'ibge6': '220455'},
-    }
-
-    def _latest(cod6, pattern, min_val=None):
-        mask = (
-            df['cod_ibge'].astype(str).str[:6] == str(cod6)
-        ) & df['indicador'].astype(str).str.contains(pattern, case=False, regex=True, na=False)
-        sub = df[mask].copy()
-        if sub.empty:
-            return None
-        sub['_a'] = pd.to_numeric(sub['ano'],   errors='coerce')
-        sub['_v'] = pd.to_numeric(sub['valor'], errors='coerce')
-        sub = sub.dropna(subset=['_a', '_v'])
-        if min_val is not None:
-            sub = sub[sub['_v'] >= min_val]
-        if sub.empty:
-            return None
-        return float(sub.sort_values('_a', ascending=False).iloc[0]['_v'])
-
-    MI = {}
-    for key, meta in MUN_META.items():
-        cod6 = meta['ibge6']
-        pop = _latest(cod6, r'Popula[çc][aã]o do munic[íi]pio')
-        if not pop or pop <= 0:
-            pop = _latest(cod6, r'Popula[çc][aã]o')
-
-        def _rate(v):
-            if v is None or not pop or pop <= 0:
-                return None
-            return round(v / pop * 100_000, 1)
-
-        MI[key] = {
-            # Saúde — direto do banco (já são taxas)
-            'mort_mat': _latest(cod6, r'mortalidade materna',  min_val=0.01),
-            'mort_neo': _latest(cod6, r'mortalidade neonatal', min_val=0.01),
-            'mort_inf': _latest(cod6, r'mortalidade infantil', min_val=0.01),
-            'bx_peso':  _latest(cod6, r'baixo peso',           min_val=0.01),
-            'sifilis':  _latest(cod6, r's[íi]filis cong',      min_val=0.01),
-            # Nutrição — direto do banco (percentuais)
-            'def_est':  _latest(cod6, r'd[eé]ficit estatural',  min_val=0.01),
-            'def_pon':  _latest(cod6, r'd[eé]ficit ponderal',   min_val=0.01),
-            'obesi':    _latest(cod6, r'obesidade.*crian|crian.*obesidade', min_val=0.01),
-            # Aprendizagem — não disponível no banco
-            'ideb':  None,
-            'alfab': None,
-            'aband': None,
-            'dist':  None,
-            # Segurança — banco tem contagens absolutas → convertemos para taxa/100k
-            'v_fis':  _rate(_latest(cod6, r'viol[eê]ncia f[íi]sica.*crian|crian.*viol[eê]ncia f[íi]sica')),
-            'v_sex':  _rate(_latest(cod6, r'viol[eê]ncia sexual.*crian|crian.*viol[eê]ncia sexual')),
-            'neglig': _latest(cod6, r'neglig[eê]ncia.*abandon|taxa.*neglig[eê]ncia'),
-            'o_hom':  _rate(_latest(cod6, r'homic[íi]dio.*crian|[óo]bitos.*homic')),
-            # Cuidado — não disponível no banco
-            'reg_nas': None,
-            'so_mae':  None,
-            'cas_inf': None,
-        }
-
-    geo_data = {}
+    # ── GeoJSON ───────────────────────────────────────────────────────────────
+    geo_data = None
     try:
-        with open(PIAUI_GEOJSON, 'r', encoding='utf-8') as _gf:
+        with open(PIAUI_GEOJSON, "r", encoding="utf-8") as _gf:
             geo_data = _json.load(_gf)
     except Exception:
         pass
 
-    MC = {k: {'nome': v['nome']} for k, v in MUN_META.items()}
+    id_map: dict[str, str] = {}
+    if geo_data:
+        for feat in geo_data.get("features", []):
+            pid = str(feat.get("properties", {}).get("id", "")).strip()
+            if len(pid) >= 6:
+                id_map[pid[:6]] = pid
 
-    geo_js = _json.dumps(geo_data) if geo_data else 'null'
-    mi_js  = _json.dumps(MI)
-    mc_js  = _json.dumps(MC)
+    # ── Scores para todos os municípios ──────────────────────────────────────
+    df_scores = _compute_all_scores(df)
+    if not df_scores.empty:
+        df_scores = df_scores.copy()
+        df_scores["geo_id"] = df_scores["cod_ibge"].map(id_map)
 
-    html = _build_visao_geral_html(geo_js, mi_js, mc_js)
-    st_html(html, height=760, scrolling=False)
+    eixo_keys   = ["saude", "nut", "edu", "seg", "cuid"]
+    eixo_labels = ["Saúde", "Nutrição", "Aprendizagem", "Segurança", "Cuidado"]
+    eixo_cors   = [e[1] for e in EIXOS_VISAO_GERAL]
+
+    # ── TERMÔMETROS ───────────────────────────────────────────────────────────
+    t_cols = st.columns(5)
+    for tcol, ekey, elbl, ecor in zip(t_cols, eixo_keys, eixo_labels, eixo_cors):
+        sc_col  = f"score_{ekey}"
+        sc_vals = df_scores[sc_col].dropna().tolist() if not df_scores.empty else []
+        avg     = round(sum(sc_vals) / len(sc_vals)) if sc_vals else None
+        crit    = sum(1 for s in sc_vals if s < 45)
+        if avg is None:
+            badge_fg, bar_pct = "#aab0bb", 0
+            trend_txt, trend_col = "sem dados", "#aab0bb"
+            badge_val = "n/d"
+            suffix = ""
+        elif avg >= 70:
+            badge_fg, bar_pct = "#27ae60", avg
+            trend_txt, trend_col = "↗ Melhorando", "#27ae60"
+            badge_val = str(avg)
+            suffix = "/ 100"
+        elif avg >= 45:
+            badge_fg, bar_pct = "#e67e22", avg
+            trend_txt, trend_col = "→ Estável", "#e67e22"
+            badge_val = str(avg)
+            suffix = "/ 100"
+        else:
+            badge_fg, bar_pct = "#c0392b", avg
+            trend_txt, trend_col = "↘ Piorando", "#c0392b"
+            badge_val = str(avg)
+            suffix = "/ 100"
+        crit_txt = f"{crit} crítico{'s' if crit != 1 else ''}" if sc_vals else "dados indisponíveis"
+        with tcol:
+            st.markdown(
+                f"""<div style="background:#fff;border:2px solid {ecor}33;border-radius:8px;padding:10px 14px;min-height:100px">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                    <span style="font-size:11px;font-weight:700;color:{ecor}">{elbl}</span>
+                    <span style="font-size:9px;color:{trend_col}">{trend_txt}</span>
+                  </div>
+                  <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px">
+                    <span style="font-size:26px;font-weight:800;color:{badge_fg}">{badge_val}</span>
+                    <span style="font-size:9px;color:#aab0bb">{suffix}</span>
+                  </div>
+                  <div style="height:5px;background:#eef0f3;border-radius:3px;overflow:hidden;margin-bottom:6px">
+                    <div style="height:100%;width:{bar_pct}%;background:{ecor};border-radius:3px"></div>
+                  </div>
+                  <div style="font-size:9px;color:{"#c0392b" if crit > 3 else "#aab0bb"};font-weight:{"700" if crit > 3 else "400"}">{crit_txt}</div>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+
+    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
+
+    # ── MAPA + PAINEL DIREITO ─────────────────────────────────────────────────
+    col_map, col_right = st.columns([1.5, 1], gap="small")
+
+    with col_map:
+        with st.container(border=True):
+            _section_header(
+                "Distribuição Territorial",
+                "Score composto · todos os 224 municípios do Piauí",
+                "#1a3a6b",
+            )
+            if PLOTLY_OK and geo_data and not df_scores.empty:
+                df_map = df_scores[df_scores["geo_id"].notna()].copy()
+                df_map["score_txt"] = df_map["score_geral"].apply(
+                    lambda s: f"{int(s)}/100" if pd.notna(s) else "n/d"
+                )
+                df_map["situacao"] = df_map["score_geral"].apply(
+                    lambda s: "Bom" if pd.notna(s) and s >= 70
+                    else ("Atenção" if pd.notna(s) and s >= 45
+                    else ("Crítico" if pd.notna(s) else "Sem dados"))
+                )
+                fig_map = px.choropleth_mapbox(
+                    df_map,
+                    geojson=geo_data,
+                    locations="geo_id",
+                    featureidkey="properties.id",
+                    color="score_geral",
+                    hover_name="municipio",
+                    hover_data={"score_txt": True, "situacao": True,
+                                "geo_id": False, "score_geral": False},
+                    color_continuous_scale=["#c0392b", "#e67e22", "#f5c842", "#27ae60"],
+                    range_color=[0, 100],
+                    mapbox_style="carto-positron",
+                    zoom=5.3,
+                    center={"lat": -7.2, "lon": -42.8},
+                    opacity=0.82,
+                    height=480,
+                    labels={"score_txt": "Score", "situacao": "Situação"},
+                )
+                fig_map.update_layout(
+                    margin=dict(l=0, r=0, t=0, b=0),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Inter, Segoe UI, sans-serif", size=10),
+                    coloraxis_colorbar=dict(
+                        title="Score",
+                        thickness=10, len=0.6,
+                        tickfont=dict(family="Inter, Segoe UI, sans-serif", size=9),
+                        tickvals=[0, 45, 70, 100],
+                        ticktext=["0", "45 Atenção", "70 Bom", "100"],
+                    ),
+                )
+                st.plotly_chart(fig_map, use_container_width=True,
+                                config={"displayModeBar": False})
+            else:
+                st.info("Mapa indisponível — GeoJSON não carregado ou Plotly ausente.")
+
+    MUN_META_10 = {
+        'Teresina':    '221100', 'Parnaíba':    '220770', 'Picos':      '220800',
+        'Floriano':    '220390', 'Oeiras':      '220700', 'S. R. Nonato': '220940',
+        'Piripiri':    '220840', 'Barras':      '220120', 'Campo Grande': '220211',
+        'Guaribas':    '220455',
+    }
+
+    def _sc_badge(val: float | None) -> str:
+        if val is None or (isinstance(val, float) and pd.isna(val)):
+            return '<span style="font-size:9px;color:#aab0bb">n/d</span>'
+        v = int(val)
+        if v >= 70:   bg, fg = "#EAF3DE", "#27ae60"
+        elif v >= 45: bg, fg = "#FAEEDA", "#e67e22"
+        else:         bg, fg = "#FCEBEB", "#c0392b"
+        return (f'<span style="background:{bg};color:{fg};font-size:9.5px;'
+                f'font-weight:700;padding:1px 6px;border-radius:3px">{v}</span>')
+
+    with col_right:
+        with st.container(border=True):
+            _section_header("10 Municípios Monitorados", "Score por eixo", "#2a5abf")
+            hdr = "".join(
+                f'<th style="text-align:center;color:{c};font-size:8px;padding:4px 3px">'
+                f'{"Saúde" if l == "Saúde" else l[:6]}</th>'
+                for l, c in zip(eixo_labels, eixo_cors)
+            )
+            rows_html = ""
+            for nome, cod6 in MUN_META_10.items():
+                row_df = df_scores[df_scores["cod_ibge"] == cod6] if not df_scores.empty else pd.DataFrame()
+                if row_df.empty:
+                    cells  = "<td colspan='5' style='text-align:center;font-size:9px;color:#aab0bb'>sem dados</td>"
+                    geral  = _sc_badge(None)
+                else:
+                    r = row_df.iloc[0]
+                    cells = "".join(
+                        f'<td style="text-align:center;padding:3px 3px">{_sc_badge(r.get(f"score_{k}"))}</td>'
+                        for k in eixo_keys
+                    )
+                    geral = _sc_badge(r.get("score_geral"))
+                rows_html += (
+                    f'<tr style="border-top:0.5px solid #f0f2f5">'
+                    f'<td style="padding:3px 8px;white-space:nowrap;font-size:10px">{nome}</td>'
+                    f'{cells}'
+                    f'<td style="text-align:center;padding:3px 5px">{geral}</td></tr>'
+                )
+            st.markdown(
+                f'<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:10px">'
+                f'<thead><tr style="background:#fafbfc;border-bottom:1px solid #eef0f3">'
+                f'<th style="text-align:left;padding:5px 8px;font-size:8px;color:#aab0bb;text-transform:uppercase">Município</th>'
+                f'{hdr}'
+                f'<th style="text-align:center;font-size:8px;color:#1a3a6b;padding:4px 5px">Geral</th>'
+                f'</tr></thead><tbody>{rows_html}</tbody></table></div>',
+                unsafe_allow_html=True,
+            )
+
+        st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
+
+        with st.container(border=True):
+            _section_header("Ranking Geral", "Melhores e piores municípios", "#2a5abf")
+            if not df_scores.empty:
+                df_rank = df_scores[df_scores["score_geral"].notna()].copy()
+                df_rank["si"] = df_rank["score_geral"].astype(int)
+                top5 = df_rank.nlargest(5, "score_geral")[["municipio", "si"]].reset_index(drop=True)
+                bot5 = df_rank.nsmallest(5, "score_geral")[["municipio", "si"]].reset_index(drop=True)
+                c_top, c_bot = st.columns(2)
+                with c_top:
+                    st.markdown(
+                        '<div style="font-size:8.5px;font-weight:700;color:#27ae60;'
+                        'text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Melhores</div>',
+                        unsafe_allow_html=True,
+                    )
+                    for _, r in top5.iterrows():
+                        st.markdown(
+                            f'<div style="display:flex;justify-content:space-between;'
+                            f'padding:3px 0;border-top:0.5px solid #f0f2f5;font-size:10px">'
+                            f'<span style="color:#2c3e50">{r["municipio"]}</span>'
+                            f'<span style="background:#EAF3DE;color:#27ae60;font-weight:700;'
+                            f'padding:1px 7px;border-radius:3px;font-size:9.5px">{r["si"]}</span></div>',
+                            unsafe_allow_html=True,
+                        )
+                with c_bot:
+                    st.markdown(
+                        '<div style="font-size:8.5px;font-weight:700;color:#c0392b;'
+                        'text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Piores</div>',
+                        unsafe_allow_html=True,
+                    )
+                    for _, r in bot5.iterrows():
+                        st.markdown(
+                            f'<div style="display:flex;justify-content:space-between;'
+                            f'padding:3px 0;border-top:0.5px solid #f0f2f5;font-size:10px">'
+                            f'<span style="color:#2c3e50">{r["municipio"]}</span>'
+                            f'<span style="background:#FCEBEB;color:#c0392b;font-weight:700;'
+                            f'padding:1px 7px;border-radius:3px;font-size:9.5px">{r["si"]}</span></div>',
+                            unsafe_allow_html=True,
+                        )
+            else:
+                st.info("Sem dados para ranking.")
+
+    st.markdown(
+        '<div style="font-size:8px;color:#aab0bb;text-align:right;margin-top:4px">'
+        'Observatório da Primeira Infância do Piauí · SIM · SINASC · SINAN · SISVAN · Scores 0–100</div>',
+        unsafe_allow_html=True,
+    )
 
 
 
