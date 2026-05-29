@@ -129,6 +129,15 @@ INDICADORES_CAT = [
     (r"crian[çc]a feliz|\bPCF\b",                 42.1,   48.2, "melhor", "{:.1f}"),
     (r"m[eé]dicos por mil",                         0.9,    2.1, "melhor", "{:.2f}"),
     (r"bolsa fam[íi]lia",                          72.4,   64.8, "melhor", "{:.1f}"),
+    # ── Cuidado — Esforços (novos) ───────────────────────────────────────────
+    (r"cobertura.*equipes.*sa[úu]de|equipes.*sa[úu]de da fam[íi]lia", 74.2, 68.4, "melhor", "{:.1f}"),
+    # ── Saúde — Saneamento (SNIS) ────────────────────────────────────────────
+    (r"esgotamento sanit[áa]rio.*domic[íi]|cobertura.*esgot.*SNIS", 48.0, 71.0, "melhor", "{:.1f}"),
+    (r"[áa]gua pot[áa]vel.*domic[íi]|cobertura.*[áa]gua.*SNIS",     74.0, 89.0, "melhor", "{:.1f}"),
+    # ── Segurança — Negligência (SINAN VIOL) ─────────────────────────────────
+    (r"neglig[eê]ncia.*abandon|taxa.*neglig[eê]ncia",               30.1, 29.5, "pior",   "{:.1f}"),
+    # ── Saúde / Nutrição — novos ─────────────────────────────────────────────
+    (r"mortalidade na inf[aâ]ncia|mort.*<5|mort.*5 anos",           28.0, 22.0, "pior",   "{:.1f}"),
 ]
 
 
@@ -2194,7 +2203,7 @@ def render_visao_geral(df: pd.DataFrame):
             # Segurança — banco tem contagens absolutas → convertemos para taxa/100k
             'v_fis':  _rate(_latest(cod6, r'viol[eê]ncia f[íi]sica.*crian|crian.*viol[eê]ncia f[íi]sica')),
             'v_sex':  _rate(_latest(cod6, r'viol[eê]ncia sexual.*crian|crian.*viol[eê]ncia sexual')),
-            'neglig': _rate(_latest(cod6, r'psicol[oó]gica.*crian|moral.*crian')),
+            'neglig': _latest(cod6, r'neglig[eê]ncia.*abandon|taxa.*neglig[eê]ncia'),
             'o_hom':  _rate(_latest(cod6, r'homic[íi]dio.*crian|[óo]bitos.*homic')),
             # Cuidado — não disponível no banco
             'reg_nas': None,
