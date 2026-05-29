@@ -1,0 +1,4 @@
+# Imagens binárias tratadas pelo Git sem diff de texto
+*.png binary
+*.jpg binary
+*.jpeg binary

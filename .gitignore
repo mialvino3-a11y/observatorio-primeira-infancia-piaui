@@ -1,0 +1,29 @@
+# Secrets — nunca commitar
+.streamlit/secrets.toml
+
+# Banco local (dados no Supabase em produção)
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.sqlite-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+
+# Dados brutos e temporários
+data_raw/
+*.xlsx
+*.csv
+_tmp_*.py
+*_snapshot_*.py
+*_backup_*.py
+
+# OS
+.DS_Store
+Thumbs.db

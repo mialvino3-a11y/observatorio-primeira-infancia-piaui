@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Navegacao Interna - Observatorio da Primeira Infancia</title>
+  <style>
+    :root {
+      --blue-primary: #5282C2;
+      --blue-deep: #4147D5;
+      --blue-ui: #2260B8;
+      --coral: #EF817D;
+      --green: #ADCC6B;
+      --bg-light: #F5F5F5;
+      --bg-panel: #FFFFFF;
+      --line: #E8E8E8;
+      --text-dark: #313131;
+      --text-mid: #4C4C4F;
+      --shadow: 0 8px 24px rgba(41, 57, 95, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      font-family: Montserrat, "Segoe UI", Arial, sans-serif;
+      background: #0d2553;
+    }
+
+    .stage {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    .frame {
+      width: 1366px;
+      height: 768px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38);
+      background: var(--bg-light);
+      display: grid;
+      grid-template-columns: 286px 1fr;
+    }
+
+    .side {
+      background: #fbfbfb;
+      border-right: 1px solid var(--line);
+      padding: 24px 18px 16px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 18px;
+    }
+
+    .brand img { width: 220px; height: auto; display: block; }
+
+    .eyebrow {
+      margin: 4px 0 0;
+      color: var(--coral);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .menu-title {
+      color: var(--text-mid);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 2px 0 0;
+    }
+
+    .menu {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .menu-btn {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--blue-ui);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: left;
+      padding: 11px 12px;
+      cursor: pointer;
+      transition: all .16s ease;
+    }
+
+    .menu-btn:hover { border-color: var(--blue-primary); }
+
+    .menu-btn.active {
+      background: var(--blue-deep);
+      color: #fff;
+      border-color: var(--blue-deep);
+      box-shadow: 0 8px 18px rgba(65, 71, 213, 0.24);
+    }
+
+    .quick {
+      margin-top: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .quick a {
+      text-decoration: none;
+      color: var(--text-mid);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .gov img { width: 170px; height: auto; display: block; }
+
+    .main {
+      display: grid;
+      grid-template-rows: auto auto auto 1fr auto auto;
+      gap: 14px;
+      padding: 22px 24px 14px;
+      background: var(--bg-light);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    .breadcrumb {
+      font-size: 12px;
+      color: #6a6d75;
+      font-weight: 600;
+    }
+
+    .top-filters {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-left: auto;
+    }
+
+    .slicer {
+      min-width: 170px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 12px;
+      background: #fff;
+      color: var(--text-mid);
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .slicer-label {
+      color: #6a6d75;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      margin-right: -2px;
+    }
+
+    .hero {
+      background: linear-gradient(110deg, rgba(82,130,194,0.16), rgba(239,129,125,0.18));
+      border: 1px solid #dfe6f3;
+      border-radius: 18px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .hero h1 {
+      margin: 0 0 6px;
+      font-size: 30px;
+      color: var(--blue-deep);
+      letter-spacing: -0.5px;
+      line-height: 1.08;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 700px;
+      color: var(--text-mid);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    .hero-tag {
+      border-radius: 999px;
+      border: 1px solid rgba(65, 71, 213, 0.25);
+      color: var(--blue-deep);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
+    .panel-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+
+    .view-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .view-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text-mid);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 11px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .view-btn.active {
+      border-color: var(--blue-deep);
+      background: var(--blue-deep);
+      color: #fff;
+    }
+
+    .panel-note {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #667084;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-content: start;
+    }
+
+    .card {
+      background: var(--bg-panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      min-height: 144px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .card h3 {
+      margin: 0;
+      color: var(--blue-ui);
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--text-mid);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 500;
+      max-width: 92%;
+    }
+
+    .status {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      color: #71757f;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status strong { color: var(--coral); }
+
+    .bottom-line {
+      height: 7px;
+      border-radius: 999px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .bottom-line span:nth-child(1) { background: var(--coral); }
+    .bottom-line span:nth-child(2) { background: #F4A94E; }
+    .bottom-line span:nth-child(3) { background: var(--green); }
+    .bottom-line span:nth-child(4) { background: var(--blue-primary); }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <main class="frame">
+      <aside class="side">
+        <div class="brand">
+          <img src="assets/pacto-logo.png" alt="Pacto pelas Criancas do Piaui" />
+          <p class="eyebrow">Observatorio da Primeira Infancia</p>
+        </div>
+
+        <p class="menu-title">Navegacao do Painel</p>
+
+        <div>
+          <nav class="menu" id="menuEixos">
+            <button class="menu-btn active" data-eixo="panorama">Panorama</button>
+            <button class="menu-btn" data-eixo="saude">Saude</button>
+            <button class="menu-btn" data-eixo="educacao">Educacao</button>
+            <button class="menu-btn" data-eixo="assistencia">Assistencia Social</button>
+            <button class="menu-btn" data-eixo="protecao">Protecao e Seguranca</button>
+          </nav>
+
+          <div class="quick">
+            <a href="#">Resumo executivo</a>
+            <a href="#">Comparativo municipal</a>
+            <a href="#">Serie historica</a>
+          </div>
+        </div>
+
+        <div class="gov">
+          <img src="assets/governo-piaui.svg" alt="Governo do Piaui" />
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="topbar">
+          <div class="breadcrumb">Observatorio &nbsp;/&nbsp; <span id="crumbEixo">Panorama</span> &nbsp;/&nbsp; Indicadores</div>
+          <div class="top-filters">
+            <span class="slicer-label">Municipio</span>
+            <select class="slicer" id="filtroMunicipio">
+              <option value="todos">Todos os municipios</option>
+              <option value="teresina">Teresina</option>
+              <option value="parnaiba">Parnaiba</option>
+              <option value="picos">Picos</option>
+              <option value="floriano">Floriano</option>
+            </select>
+            <span class="slicer-label">Ano</span>
+            <select class="slicer" id="filtroAno">
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hero">
+          <div>
+            <h1 id="pageTitle">Painel de Panorama</h1>
+            <p id="pageDesc">Visao integrada dos principais indicadores para apoio a leitura executiva da primeira infancia no estado.</p>
+          </div>
+          <span class="hero-tag" id="heroTag">Eixo ativo</span>
+        </div>
+
+        <div class="panel-nav">
+          <div class="view-buttons" id="viewButtons">
+            <button class="view-btn active" data-view="indicadores">Indicadores</button>
+            <button class="view-btn" data-view="comparativo">Comparativo nacional</button>
+            <button class="view-btn" data-view="alertas">Alertas</button>
+          </div>
+          <div class="panel-note" id="panelNote">Sugestao Power BI: alternar esses modos por Bookmarks</div>
+        </div>
+
+        <div class="grid">
+          <article class="card">
+            <h3>Indicadores-chave</h3>
+            <p>Bloco sintetico com principais metricas do eixo selecionado para leitura rapida.</p>
+          </article>
+          <article class="card">
+            <h3>Mapa Interativo</h3>
+            <p>Visualizacao territorial para comparar municipios e destacar prioridades de acao.</p>
+          </article>
+          <article class="card">
+            <h3>Serie Historica</h3>
+            <p>Evolucao temporal dos indicadores para acompanhamento de tendencia e resultado.</p>
+          </article>
+          <article class="card">
+            <h3>Recortes e Filtros</h3>
+            <p>Cruzamentos por publico, territorio e periodo para apoiar decisoes mais precisas.</p>
+          </article>
+        </div>
+
+        <div class="status">
+          <span>Ultima atualizacao: 28/04/2026 11:57</span>
+          <strong>Primeira infancia e para a vida toda.</strong>
+        </div>
+
+        <div class="bottom-line"><span></span><span></span><span></span><span></span></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const eixoConfig = {
+      panorama: {
+        nome: "Panorama",
+        titulo: "Painel de Panorama",
+        desc: "Visao integrada dos principais indicadores para apoio a leitura executiva da primeira infancia no estado."
+      },
+      saude: {
+        nome: "Saude",
+        titulo: "Painel de Saude",
+        desc: "Acompanhamento de cuidado materno-infantil, vacinacao e atencao basica para primeira infancia."
+      },
+      educacao: {
+        nome: "Educacao",
+        titulo: "Painel de Educacao",
+        desc: "Leitura de acesso, permanencia e desenvolvimento educacional na etapa da primeira infancia."
+      },
+      assistencia: {
+        nome: "Assistencia Social",
+        titulo: "Painel de Assistencia Social",
+        desc: "Monitoramento da protecao social e cobertura de servicos para familias e criancas."
+      },
+      protecao: {
+        nome: "Protecao e Seguranca",
+        titulo: "Painel de Protecao e Seguranca",
+        desc: "Analise de riscos e violencias com foco na garantia de direitos e cuidado intersetorial."
+      }
+    };
+
+    const menu = document.getElementById("menuEixos");
+    const title = document.getElementById("pageTitle");
+    const desc = document.getElementById("pageDesc");
+    const crumb = document.getElementById("crumbEixo");
+    const tag = document.getElementById("heroTag");
+    const panelNote = document.getElementById("panelNote");
+    const viewButtons = document.getElementById("viewButtons");
+
+    function resetViewButtons() {
+      document.querySelectorAll(".view-btn").forEach((b, idx) => {
+        b.classList.toggle("active", idx === 0);
+      });
+    }
+
+    function updateNoteByEixo(eixo) {
+      if (eixo === "saude") {
+        panelNote.textContent = "No eixo Saude: Indicadores, Comparativo nacional e Alertas podem ser 3 Bookmarks";
+      } else {
+        panelNote.textContent = "Sugestao Power BI: alternar esses modos por Bookmarks";
+      }
+    }
+
+    menu.addEventListener("click", (e) => {
+      const btn = e.target.closest(".menu-btn");
+      if (!btn) return;
+      const eixo = btn.getAttribute("data-eixo");
+      if (!eixoConfig[eixo]) return;
+
+      document.querySelectorAll(".menu-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      title.textContent = eixoConfig[eixo].titulo;
+      desc.textContent = eixoConfig[eixo].desc;
+      crumb.textContent = eixoConfig[eixo].nome;
+      tag.textContent = eixoConfig[eixo].nome;
+      resetViewButtons();
+      updateNoteByEixo(eixo);
+    });
+
+    viewButtons.addEventListener("click", (e) => {
+      const btn = e.target.closest(".view-btn");
+      if (!btn) return;
+      document.querySelectorAll(".view-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  </script>
+</body>
+</html>
