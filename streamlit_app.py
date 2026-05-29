@@ -1542,86 +1542,90 @@ def render_dimensao(
             st.info("Sem dados para este subtema / ano.")
 
     # RESULTADOS
-    st.markdown('<div class="pi-panel-title">Resultados — Situação Atual</div>', unsafe_allow_html=True)
-    subtema_res = st.radio(
-        "Subtema resultado",
-        [s[0] for s in subtemas_resultado_use],
-        horizontal=True,
-        label_visibility="collapsed",
-        key=f"radio_res_{dimensao}",
-    )
-    padrao_res = next(p for l, p in subtemas_resultado_use if l == subtema_res)
-    inds_res, ano_res = _inds_year_by_pattern(dfx, padrao_res, ano, 12)
+    _section_header("Resultados", "Situação atual e série histórica", cor_resultado)
+    tabs_res = st.tabs([s[0] for s in subtemas_resultado_use])
+    for _tab_r, (_lbl_r, _pat_r) in zip(tabs_res, subtemas_resultado_use):
+        with _tab_r:
+            _inds_r, _ano_r = _inds_year_by_pattern(dfx, _pat_r, ano, 12)
+            _c_rl, _c_rr = st.columns([1, 1], gap="small")
+            with _c_rl:
+                with st.container(border=True):
+                    _section_header("Situação", f"Ano {_ano_r}", cor_resultado)
+                    if _ano_r != ano:
+                        st.caption(f"Sem dados em {ano}. Exibindo: {_ano_r}.")
+                    _render_situacao_table(_inds_r, _ano_r)
+            with _c_rr:
+                with st.container(border=True):
+                    _section_header("Série Histórica", "Município vs Piauí", cor_resultado)
+                    _ind_r = st.selectbox(
+                        "Indicador",
+                        _inds_r if _inds_r else ["Sem dados"],
+                        key=f"sel_ind_res_{dimensao}_{_lbl_r.replace(' ','_')}",
+                        label_visibility="collapsed",
+                    )
+                    if _ind_r != "Sem dados":
+                        s_mun = _serie_mun(dfx, cod_ibge, re.escape(_ind_r))
+                        s_pi  = _serie_uf(dfx, re.escape(_ind_r))
+                        s_br  = _serie_br(dfx, re.escape(_ind_r))
+                        tbadge, tcss = trend_badge(
+                            s_mun["valor"] if not s_mun.empty else pd.Series([], dtype=float),
+                            sentido=_ind_cls(_ind_r),
+                        )
+                        st.markdown(
+                            f'<span class="pi-badge {tcss}" style="margin-bottom:6px;display:inline-block;">{tbadge}</span>',
+                            unsafe_allow_html=True,
+                        )
+                        fig = _chart_linha(s_mun, s_pi, s_br, _ind_r, cor_resultado, nome_mun)
+                        if fig is not None:
+                            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                        else:
+                            _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
+                    else:
+                        st.info("Sem dados para série histórica.")
 
-    c_res_l, c_res_r = st.columns([1, 1], gap="small")
-    with c_res_l:
-        with st.container(border=True):
-            if ano_res != ano:
-                st.caption(f"Sem dados em {ano}. Exibindo último ano disponível: {ano_res}.")
-            _render_situacao_table(inds_res, ano_res)
-    with c_res_r:
-        with st.container(border=True):
-            st.markdown('<div class="pi-panel-title">Resultados — Série Histórica</div>', unsafe_allow_html=True)
-            ind_res_sel = st.selectbox(
-                "Indicador resultado",
-                inds_res if inds_res else ["Sem dados"],
-                key=f"sel_ind_res_{dimensao}",
-                label_visibility="collapsed",
-            )
-            if ind_res_sel != "Sem dados":
-                s_mun = _serie_mun(dfx, cod_ibge, re.escape(ind_res_sel))
-                s_pi = _serie_uf(dfx, re.escape(ind_res_sel))
-                s_br = _serie_br(dfx, re.escape(ind_res_sel))
-                tbadge, tcss = trend_badge(s_mun["valor"] if not s_mun.empty else pd.Series([], dtype=float), sentido=_ind_cls(ind_res_sel))
-                st.markdown(f'<span class="pi-badge {tcss}" style="margin-bottom:6px;display:inline-block;">{tbadge}</span>', unsafe_allow_html=True)
-                fig = _chart_linha(s_mun, s_pi, s_br, ind_res_sel, cor_resultado, nome_mun)
-                if fig is not None:
-                    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-                else:
-                    _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
-            else:
-                st.info("Sem dados para série histórica.")
+    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
 
     # ESFORÇOS
-    st.markdown('<div class="pi-panel-title" style="margin-top:10px;">Esforços — Situação Atual</div>', unsafe_allow_html=True)
-    subtema_esf = st.radio(
-        "Subtema esforço",
-        [s[0] for s in subtemas_esforco_use],
-        horizontal=True,
-        label_visibility="collapsed",
-        key=f"radio_esf_{dimensao}",
-    )
-    padrao_esf = next(p for l, p in subtemas_esforco_use if l == subtema_esf)
-    inds_esf, ano_esf = _inds_year_by_pattern(dfx, padrao_esf, ano, 12)
-
-    c_esf_l, c_esf_r = st.columns([1, 1], gap="small")
-    with c_esf_l:
-        with st.container(border=True):
-            if ano_esf != ano:
-                st.caption(f"Sem dados em {ano}. Exibindo último ano disponível: {ano_esf}.")
-            _render_situacao_table(inds_esf, ano_esf)
-    with c_esf_r:
-        with st.container(border=True):
-            st.markdown('<div class="pi-panel-title">Esforços — Série Histórica</div>', unsafe_allow_html=True)
-            ind_esf_sel = st.selectbox(
-                "Indicador esforço",
-                inds_esf if inds_esf else ["Sem dados"],
-                key=f"sel_ind_esf_{dimensao}",
-                label_visibility="collapsed",
-            )
-            if ind_esf_sel != "Sem dados":
-                s_mun = _serie_mun(dfx, cod_ibge, re.escape(ind_esf_sel))
-                s_pi = _serie_uf(dfx, re.escape(ind_esf_sel))
-                s_br = _serie_br(dfx, re.escape(ind_esf_sel))
-                tbadge, tcss = trend_badge(s_mun["valor"] if not s_mun.empty else pd.Series([], dtype=float), sentido=_ind_cls(ind_esf_sel))
-                st.markdown(f'<span class="pi-badge {tcss}" style="margin-bottom:6px;display:inline-block;">{tbadge}</span>', unsafe_allow_html=True)
-                fig = _chart_linha(s_mun, s_pi, s_br, ind_esf_sel, cor_esforco, nome_mun)
-                if fig is not None:
-                    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-                else:
-                    _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
-            else:
-                st.info("Sem dados para série histórica.")
+    _section_header("Esforços", "Situação atual e série histórica", cor_esforco)
+    tabs_esf = st.tabs([s[0] for s in subtemas_esforco_use])
+    for _tab_e, (_lbl_e, _pat_e) in zip(tabs_esf, subtemas_esforco_use):
+        with _tab_e:
+            _inds_e, _ano_e = _inds_year_by_pattern(dfx, _pat_e, ano, 12)
+            _c_el, _c_er = st.columns([1, 1], gap="small")
+            with _c_el:
+                with st.container(border=True):
+                    _section_header("Situação", f"Ano {_ano_e}", cor_esforco)
+                    if _ano_e != ano:
+                        st.caption(f"Sem dados em {ano}. Exibindo: {_ano_e}.")
+                    _render_situacao_table(_inds_e, _ano_e)
+            with _c_er:
+                with st.container(border=True):
+                    _section_header("Série Histórica", "Município vs Piauí", cor_esforco)
+                    _ind_e = st.selectbox(
+                        "Indicador",
+                        _inds_e if _inds_e else ["Sem dados"],
+                        key=f"sel_ind_esf_{dimensao}_{_lbl_e.replace(' ','_')}",
+                        label_visibility="collapsed",
+                    )
+                    if _ind_e != "Sem dados":
+                        s_mun = _serie_mun(dfx, cod_ibge, re.escape(_ind_e))
+                        s_pi  = _serie_uf(dfx, re.escape(_ind_e))
+                        s_br  = _serie_br(dfx, re.escape(_ind_e))
+                        tbadge, tcss = trend_badge(
+                            s_mun["valor"] if not s_mun.empty else pd.Series([], dtype=float),
+                            sentido=_ind_cls(_ind_e),
+                        )
+                        st.markdown(
+                            f'<span class="pi-badge {tcss}" style="margin-bottom:6px;display:inline-block;">{tbadge}</span>',
+                            unsafe_allow_html=True,
+                        )
+                        fig = _chart_linha(s_mun, s_pi, s_br, _ind_e, cor_esforco, nome_mun)
+                        if fig is not None:
+                            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                        else:
+                            _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
+                    else:
+                        st.info("Sem dados para série histórica.")
 
 
 def render_saude(df: pd.DataFrame):
@@ -2149,10 +2153,10 @@ def render_visao_geral(df: pd.DataFrame):
         'picos':    {'nome': 'Picos',             'ibge7': '2208007', 'ibge6': '220800'},
         'floriano': {'nome': 'Floriano',          'ibge7': '2203909', 'ibge6': '220390'},
         'oeiras':   {'nome': 'Oeiras',            'ibge7': '2207009', 'ibge6': '220700'},
-        'srnona':   {'nome': 'S. R. Nonato',      'ibge7': '2209401', 'ibge6': '221060'},
+        'srnona':   {'nome': 'S. R. Nonato',      'ibge7': '2209401', 'ibge6': '220940'},
         'piripiri': {'nome': 'Piripiri',          'ibge7': '2208403', 'ibge6': '220840'},
         'barras':   {'nome': 'Barras',            'ibge7': '2201200', 'ibge6': '220120'},
-        'campogr':  {'nome': 'Campo Grande',      'ibge7': '2202117', 'ibge6': '220213'},
+        'campogr':  {'nome': 'Campo Grande',      'ibge7': '2202117', 'ibge6': '220211'},
         'guaribas': {'nome': 'Guaribas',          'ibge7': '2204550', 'ibge6': '220455'},
     }
 
@@ -2228,256 +2232,101 @@ def render_visao_geral(df: pd.DataFrame):
     st_html(html, height=760, scrolling=False)
 
 
-def render_panorama(df: pd.DataFrame):
-    _render_contexto_nav("Panorama")
-    st.markdown("### Panorama Geral — Piauí")
-    st.caption("Visão consolidada dos indicadores monitorados em todos os municípios.")
-
-    anos = sorted(df["ano"].dropna().astype(int).unique().tolist(), reverse=True)
-    c1, c2 = st.columns([2, 1])
-    with c1:
-        ano = st.selectbox("Ano de referência", anos, key="panorama_ano")
-    with c2:
-        eixo_opts = ["Todos"] + sorted(df["eixo"].dropna().unique().tolist())
-        eixo = st.selectbox("Eixo", eixo_opts, key="panorama_eixo")
-
-    dff = df[df["ano"] == ano].copy()
-    if eixo != "Todos":
-        dff = dff[dff["eixo"] == eixo]
-
-    k1, k2, k3, k4 = st.columns(4)
-    with k1:
-        kpi_card("Municípios cobertos", fmt_int(dff["municipio"].nunique()), f"Ano {ano}")
-    with k2:
-        kpi_card("Indicadores ativos", fmt_int(dff["indicador"].nunique()), eixo if eixo != "Todos" else "todos os eixos")
-    with k3:
-        kpi_card("Registros", fmt_int(len(dff)), "fato_indicador")
-    with k4:
-        kpi_card("Eixos monitorados", fmt_int(dff["eixo"].nunique()), "dimensões")
-
-    st.markdown("---")
-
-    col_heat, col_rank = st.columns([1.4, 1])
-
-    with col_heat:
-        with st.container(border=True):
-            st.markdown('<div class="pi-panel-title">Distribuição por eixo — média dos valores</div>', unsafe_allow_html=True)
-            pivot = (
-                dff.groupby(["municipio", "eixo"])["valor"]
-                .mean()
-                .reset_index()
-                .pivot(index="municipio", columns="eixo", values="valor")
-            )
-            if not pivot.empty:
-                if PLOTLY_OK:
-                    fig_heat = px.imshow(
-                        pivot,
-                        color_continuous_scale="RdYlGn",
-                        aspect="auto",
-                        labels=dict(color="Média"),
-                    )
-                    fig_heat.update_layout(
-                        height=max(300, len(pivot) * 22 + 60),
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        margin=dict(l=4, r=4, t=8, b=4),
-                        font=dict(family="Manrope, sans-serif", size=10),
-                        coloraxis_showscale=False,
-                    )
-                    st.plotly_chart(fig_heat, use_container_width=True, config={"displayModeBar": False})
-                else:
-                    st.dataframe(
-                        pivot,
-                        use_container_width=True,
-                        height=max(300, len(pivot) * 22 + 60),
-                    )
-            else:
-                st.info("Sem dados suficientes para o heatmap.")
-
-    with col_rank:
-        with st.container(border=True):
-            st.markdown('<div class="pi-panel-title">Top municípios — média geral</div>', unsafe_allow_html=True)
-            rank = (
-                dff.groupby("municipio", as_index=False)["valor"]
-                .mean()
-                .sort_values("valor", ascending=False)
-                .head(15)
-            )
-            if not rank.empty:
-                if PLOTLY_OK:
-                    fig_rank = px.bar(
-                        rank, x="valor", y="municipio", orientation="h",
-                        color_discrete_sequence=[COR_ESFORCO],
-                    )
-                    fig_rank.update_layout(
-                        height=max(300, len(rank) * 28 + 60),
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        margin=dict(l=4, r=4, t=8, b=4),
-                        font=dict(family="Manrope, sans-serif", size=10),
-                        yaxis=dict(autorange="reversed"),
-                        showlegend=False,
-                        xaxis=dict(gridcolor="#f0f2f5"),
-                    )
-                    st.plotly_chart(fig_rank, use_container_width=True, config={"displayModeBar": False})
-                else:
-                    rank2 = rank.set_index("municipio")[["valor"]].rename(columns={"valor": "Média"})
-                    st.bar_chart(rank2, use_container_width=True, height=max(300, len(rank) * 24 + 60))
-            else:
-                st.info("Sem dados para ranking.")
-
-    with st.container(border=True):
-        st.markdown('<div class="pi-panel-title">Tabela de dados (amostra — 2000 linhas)</div>', unsafe_allow_html=True)
-        st.dataframe(
-            dff.sort_values(["municipio", "indicador"]).reset_index(drop=True).head(2000),
-            use_container_width=True,
-            hide_index=True,
-            height=360,
-        )
-
 
 def render_perfil(df: pd.DataFrame):
     _render_contexto_nav("Perfil")
-    st.markdown("### Perfil do Município")
 
     cod_ibge, nome_mun, ano = _seletores_mun_ano(df, key_prefix="perfil")
     pop_06 = extract_latest_mun_value(df, cod_ibge, r"Popula[çc][aã]o entre 0 a 6 anos|pop\.?\s*0.?6", ano_ref=ano)
     _ctx_bar(nome_mun, int(pop_06) if pop_06 is not None and pop_06 >= 1 else None, ano)
+    _render_dim_header(df, cod_ibge, ano, "Perfil do Município", "SIM · SINASC · SINAN · SISVAN · Censo Escolar · SNIS · CadÚnico")
 
     dff = df[(df["cod_ibge"] == cod_ibge) & (df["ano"] == ano)].copy()
 
+    st.markdown('<div style="height:6px"></div>', unsafe_allow_html=True)
+
     k1, k2, k3, k4 = st.columns(4)
-    idhm = extract_latest_mun_value(df, cod_ibge, r"\bIDHM\b", ano_ref=ano)
+    idhm = _normalize_display_value("IDHM", extract_latest_mun_value(df, cod_ibge, r"\bIDHM\b", ano_ref=ano))
     pob  = extract_latest_mun_value(df, cod_ibge, r"Crian[çc]as <5 anos em pobreza", ano_ref=ano)
     ext  = extract_latest_mun_value(df, cod_ibge, r"Crian[çc]as <5 anos em extrema pobreza", ano_ref=ano)
     urb  = extract_latest_mun_value(df, cod_ibge, r"situa[çc][aã]o urbano-rural|[áa]rea urbana", ano_ref=ano)
-    idhm = _normalize_display_value("IDHM", idhm)
     with k1:
         kpi_card("IDHM", fmt_num(idhm, 3), f"Ref. {ano}")
     with k2:
-        kpi_card("Crianças <5 em pobreza", fmt_num(pob, 0), "valor absoluto")
+        kpi_card("Crianças <5 em pobreza", fmt_num(pob, 0), "absoluto")
     with k3:
-        kpi_card("Crianças <5 em extrema pobreza", fmt_num(ext, 0), "valor absoluto")
+        kpi_card("Extrema pobreza <5", fmt_num(ext, 0), "absoluto")
     with k4:
         kpi_card("Área urbana", fmt_num(urb, 1, "%"), "estimativa")
 
-    st.markdown("---")
+    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
+
+    col_left, col_right = st.columns([1.1, 1], gap="small")
 
     eixos = sorted(dff["eixo"].dropna().unique().tolist())
-    for eixo in eixos:
-        with st.expander(f"📊 {eixo}", expanded=False):
-            sub = dff[dff["eixo"] == eixo][["indicador", "valor", "fonte_principal"]].copy()
-            sub["valor"] = pd.to_numeric(sub["valor"], errors="coerce")
-            sub = sub.dropna(subset=["valor"]).sort_values("indicador")
-            if not sub.empty:
-                if PLOTLY_OK:
-                    fig = px.bar(
-                        sub.head(20), x="valor", y="indicador", orientation="h",
-                        color_discrete_sequence=[COR_RESULTADO],
-                        hover_data=["fonte_principal"],
-                    )
-                    fig.update_layout(
-                        height=max(200, len(sub.head(20)) * 30 + 50),
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
-                        margin=dict(l=4, r=4, t=8, b=4),
-                        font=dict(family="Manrope, sans-serif", size=10),
-                        showlegend=False,
-                        yaxis=dict(autorange="reversed"),
-                        xaxis=dict(gridcolor="#f0f2f5"),
-                    )
-                    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-                else:
-                    st.bar_chart(
-                        sub.head(20).set_index("indicador")[["valor"]],
-                        use_container_width=True,
-                        height=max(200, len(sub.head(20)) * 26 + 50),
-                    )
+
+    with col_left:
+        with st.container(border=True):
+            _section_header("Indicadores por Dimensão", f"Ano {ano} — Mun. vs Referência PI", "#2a5abf")
+            if dff.empty:
+                st.info("Sem dados para este município / ano.")
             else:
-                st.info("Sem dados para este eixo / ano.")
+                for eixo in eixos:
+                    sub = dff[dff["eixo"] == eixo].copy()
+                    inds = sorted(sub["indicador"].dropna().unique().tolist())
+                    if not inds:
+                        continue
+                    with st.expander(eixo, expanded=True):
+                        rows = []
+                        for ind in inds:
+                            vals = pd.to_numeric(
+                                sub.loc[sub["indicador"] == ind, "valor"], errors="coerce"
+                            ).dropna()
+                            mun_v = float(vals.mean()) if not vals.empty else None
+                            mun_v = _normalize_display_value(ind, mun_v)
+                            ref_pi = _ind_ref_pi(ind)
+                            rows.append({
+                                "nome": ind,
+                                "mun": mun_v,
+                                "pi": ref_pi,
+                                "br": None,
+                                "fmt": _ind_fmt(ind),
+                                "sentido": _ind_cls(ind),
+                            })
+                        if rows:
+                            _tabela_indicadores(rows)
 
+    with col_right:
+        with st.container(border=True):
+            _section_header("Série Histórica", "Evolução do indicador selecionado", COR_RESULTADO)
+            all_inds = sorted(dff["indicador"].dropna().unique().tolist())
+            if all_inds:
+                ind_sel = st.selectbox(
+                    "Selecione um indicador",
+                    all_inds,
+                    key="perfil_ind_serie",
+                    label_visibility="collapsed",
+                )
+                if ind_sel:
+                    s_mun = _serie_mun(df, cod_ibge, re.escape(ind_sel))
+                    s_pi  = _serie_uf(df, re.escape(ind_sel))
+                    s_br  = _serie_br(df, re.escape(ind_sel))
+                    tbadge, tcss = trend_badge(
+                        s_mun["valor"] if not s_mun.empty else pd.Series([], dtype=float),
+                        sentido=_ind_cls(ind_sel),
+                    )
+                    st.markdown(
+                        f'<span class="pi-badge {tcss}" style="margin-bottom:6px;display:inline-block;">{tbadge}</span>',
+                        unsafe_allow_html=True,
+                    )
+                    fig = _chart_linha(s_mun, s_pi, s_br, ind_sel, COR_RESULTADO, nome_mun)
+                    if fig is not None:
+                        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                    else:
+                        _render_line_fallback(s_mun, s_pi, s_br, nome_mun)
+            else:
+                st.info("Sem dados disponíveis.")
 
-@st.cache_data(show_spinner=False)
-def _load_piaui_geojson():
-    if not PIAUI_GEOJSON.exists():
-        return None
-    try:
-        return json.loads(PIAUI_GEOJSON.read_text(encoding="utf-8"))
-    except Exception:
-        return None
-
-
-def render_mapa_piaui(df: pd.DataFrame):
-    _render_contexto_nav("MapaPiaui")
-    st.markdown("### Mapa do Piauí — Indicador por Município")
-
-    geo = _load_piaui_geojson()
-    if not geo:
-        st.warning("GeoJSON do Piauí não encontrado.")
-        return
-
-    anos = sorted(df["ano"].dropna().astype(int).unique().tolist(), reverse=True)
-    indicadores = sorted(df["indicador"].dropna().unique().tolist())
-
-    c1, c2 = st.columns([1, 2])
-    with c1:
-        ano = st.selectbox("Ano", anos, key="mapa_ano")
-    with c2:
-        indicador = st.selectbox("Indicador", indicadores, key="mapa_indicador")
-
-    dff = df[(df["ano"] == ano) & (df["indicador"] == indicador)].copy()
-    if dff.empty:
-        st.info("Sem dados para o recorte selecionado.")
-        return
-
-    dff["cod6"] = dff["cod_ibge"].astype(str).str.zfill(6).str[:6]
-    id_map = {}
-    for f in geo.get("features", []):
-        pid = str(f.get("properties", {}).get("id", "")).strip()
-        if len(pid) >= 6:
-            id_map[pid[:6]] = pid
-
-    dff["geo_id"] = dff["cod6"].map(id_map)
-    miss_ct = int(dff["geo_id"].isna().sum())
-    dff = dff.dropna(subset=["geo_id"])
-    if dff.empty:
-        st.info("Não foi possível casar códigos do banco com o GeoJSON.")
-        return
-    if miss_ct > 0:
-        st.caption(f"{miss_ct} município(s) sem geometria no GeoJSON atual.")
-
-    agg = (
-        dff.groupby(["geo_id", "municipio"], as_index=False)["valor"]
-        .mean()
-        .rename(columns={"valor": "valor_medio"})
-    )
-
-    if PLOTLY_OK:
-        fig = px.choropleth_mapbox(
-            agg,
-            geojson=geo,
-            locations="geo_id",
-            featureidkey="properties.id",
-            color="valor_medio",
-            hover_name="municipio",
-            hover_data={"valor_medio": ":.2f", "geo_id": False},
-            color_continuous_scale="Blues",
-            mapbox_style="carto-positron",
-            zoom=6,
-            center={"lat": -7.2, "lon": -42.8},
-            opacity=0.75,
-            height=560,
-        )
-        fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-    else:
-        st.info("Mapa interativo disponível quando Plotly estiver instalado. Exibindo tabela como fallback.")
-        st.dataframe(
-            agg.sort_values("valor_medio", ascending=False),
-            use_container_width=True,
-            hide_index=True,
-            height=440,
-        )
 
 
 def _normalize_page_name(v: str | None) -> str | None:
